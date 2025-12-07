@@ -72,7 +72,7 @@ This script checks that all files are in place and paths are relative.
 4. Under Source, select "GitHub Actions"
 5. Push to `main` branch to trigger automatic deployment
 
-The site will be available at: `https://[username].github.io/[repository-name]/`
+The site will be available at: `https://godsscion.github.io/savign/`
 
 **For detailed deployment instructions and troubleshooting, see [DEPLOYMENT.md](./DEPLOYMENT.md)**
 
