@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SAVIGN - Building the future of AI-powered services">
+  <meta name="theme-color" content="#050505">
+  <title>SAVIGN - AI-Powered Services</title>
+  
+  <!-- Critical CSS inlined for performance -->
+  <style>
+    /* Critical CSS - Above the fold styles */
+    /* Reset essentials */
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+    body{min-height:100vh;line-height:1.5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto','Oxygen','Ubuntu','Cantarell',sans-serif;color:#fff;background-color:#050505}
+    img,picture,video,canvas,svg{display:block;max-width:100%}
+    a{text-decoration:none;color:inherit}
+    button{background:none;border:none;cursor:pointer;font:inherit}
+    
+    /* Variables - Critical subset */
+    :root{
+      --color-background:#050505;
+      --color-text:#fff;
+      --color-glass-border:rgba(255,255,255,.1);
+      --color-glass-background:rgba(255,255,255,.05);
+      --space-md:1.5rem;
+      --space-xl:3rem;
+      --font-size-h1:clamp(2rem,5vw + 1rem,6rem);
+      --font-size-body:clamp(1rem,.5vw + .875rem,1.125rem);
+      --transition-fast:.2s ease;
+      --transition-base:.3s ease;
+      --z-header:100;
+      --z-menu:1000;
+      --blur-md:20px;
+      --radius-sm:.5rem;
+    }
+    
+    /* Header - Critical */
+    .site-header{position:fixed;top:0;left:0;right:0;z-index:var(--z-header);background:rgba(5,5,5,.95);-webkit-backdrop-filter:blur(var(--blur-md));backdrop-filter:blur(var(--blur-md));border-bottom:1px solid var(--color-glass-border);height:4rem}
+    @supports (backdrop-filter:blur(20px)) or (-webkit-backdrop-filter:blur(20px)){.site-header{background:rgba(5,5,5,.8)}}
+    .header-container{max-width:1440px;height:100%;margin:0 auto;padding:0 var(--space-md);display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between}
+    .logo{height:2rem;width:auto}
+    .desktop-nav{display:none}
+    .menu-toggle{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;width:2.75rem;height:2.75rem;padding:0;background:transparent;border:none;cursor:pointer}
+    .menu-icon{position:relative;width:1.5rem;height:1.5rem;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-ms-flex-direction:column;flex-direction:column;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;gap:.375rem}
+    .line{display:block;width:100%;height:2px;background-color:var(--color-text);-webkit-transition:-webkit-transform var(--transition-base);transition:-webkit-transform var(--transition-base);-o-transition:transform var(--transition-base);transition:transform var(--transition-base);transition:transform var(--transition-base),-webkit-transform var(--transition-base)}
+    
+    /* Hero - Critical */
+    .hero{min-height:100vh;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;padding-top:4rem;position:relative;overflow:hidden}
+    .hero-container{max-width:1440px;width:100%;padding:var(--space-xl) var(--space-md);display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-ms-flex-direction:column;flex-direction:column;-webkit-box-align:center;-ms-flex-align:center;align-items:center;text-align:center;gap:var(--space-xl)}
+    .hero-headline{font-size:var(--font-size-h1);font-weight:700;line-height:1.1;margin-bottom:var(--space-md)}
+    
+    @media(min-width:1024px){
+      .site-header{height:5rem}
+      .logo{height:2.5rem}
+      .desktop-nav{display:-webkit-box;display:-ms-flexbox;display:flex;gap:var(--space-md);-webkit-box-align:center;-ms-flex-align:center;align-items:center}
+      .menu-toggle{display:none}
+      .hero-container{-webkit-box-orient:horizontal;-webkit-box-direction:normal;-ms-flex-direction:row;flex-direction:row;text-align:left}
+    }
+  </style>
+  
+  <!-- Non-critical CSS loaded asynchronously -->
+  <link rel="preload" href="./css/reset.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="./css/variables.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="./css/base.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="./css/layout.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="./css/components.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="./css/animations.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="./css/reset.css">
+    <link rel="stylesheet" href="./css/variables.css">
+    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/layout.css">
+    <link rel="stylesheet" href="./css/components.css">
+    <link rel="stylesheet" href="./css/animations.css">
+  </noscript>
+</head>
+<body>
+  <!-- Skip to main content link for keyboard navigation -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <!-- Header / Navigation -->
+  <header class="site-header" role="banner">
+    <div class="header-container">
+      <a href="#" class="logo-link" aria-label="SAVIGN Home">
+        <!-- SVG logo doesn't need picture element or lazy loading (above fold, critical) -->
+        <img src="./assets/logo.svg" alt="SAVIGN Logo" class="logo">
+      </a>
+      
+      <!-- Desktop Navigation -->
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <a href="#philosophy" class="nav-link">Philosophy</a>
+        <a href="#ventures" class="nav-link">Ventures</a>
+        <a href="#founder" class="nav-link">Founder</a>
+        <a href="#contact" class="nav-link">Contact</a>
+      </nav>
+      
+      <!-- Mobile Menu Toggle -->
+      <button class="menu-toggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span class="menu-icon">
+          <span class="line line-1"></span>
+          <span class="line line-2"></span>
+        </span>
+      </button>
+    </div>
+  </header>
+  
+  <!-- Mobile Menu Overlay -->
+  <nav id="mobile-menu" class="menu-overlay" aria-hidden="true">
+    <a href="#philosophy" class="menu-link">Philosophy</a>
+    <a href="#ventures" class="menu-link">Ventures</a>
+    <a href="#founder" class="menu-link">Founder</a>
+    <a href="#contact" class="menu-link">Contact</a>
+  </nav>
+  
+  <!-- Main Content -->
+  <main id="main-content" role="main">
+    <!-- Hero Section -->
+    <section class="hero" id="hero" aria-labelledby="hero-heading">
+      <div class="hero-container">
+        <div class="hero-content">
+          <h1 id="hero-heading" class="hero-headline">Building the future of AI-powered services</h1>
+          <p class="hero-subheadline">SAVIGN is the parent entity for a suite of innovative AI and service-based products</p>
+          <a href="#ventures" class="cta-button" aria-label="Explore our product ventures">Explore Our Ventures</a>
+        </div>
+        <div class="hero-visual">
+          <div class="hero-animation"></div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Philosophy Section -->
+    <section class="section" id="philosophy" aria-labelledby="philosophy-heading">
+      <div class="section-container reveal">
+        <h2 id="philosophy-heading" class="section-title">Our Philosophy</h2>
+        <p class="section-text">Content coming soon...</p>
+      </div>
+    </section>
+    
+    <!-- Product Ecosystem Section (Bento Grid) -->
+    <section class="section ecosystem-section" id="ventures" aria-labelledby="ventures-heading">
+      <div class="section-container">
+        <h2 id="ventures-heading" class="section-title reveal">Product Ecosystem</h2>
+        <div class="bento-grid reveal" role="list">
+          <!-- Featured Product Card -->
+          <article class="product-card card-featured" role="listitem">
+            <div class="card-icon" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AI Platform icon">
+                <title>AI Platform icon</title>
+                <rect width="48" height="48" rx="8" fill="rgba(255,255,255,0.1)"/>
+                <path d="M24 12L32 20L24 28L16 20L24 12Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M24 28L32 36L24 44L16 36L24 28Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3 class="card-title">AI Platform</h3>
+            <p class="card-description">Our flagship AI platform delivering cutting-edge machine learning solutions for enterprise clients.</p>
+            <a href="#" class="card-link" aria-label="Learn more about AI Platform">Learn More →</a>
+          </article>
+          
+          <!-- Medium Product Card -->
+          <article class="product-card card-medium" role="listitem">
+            <div class="card-icon" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Automation Suite icon">
+                <title>Automation Suite icon</title>
+                <rect width="48" height="48" rx="8" fill="rgba(255,255,255,0.1)"/>
+                <circle cx="24" cy="24" r="10" stroke="white" stroke-width="2"/>
+                <path d="M24 14V24L30 27" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3 class="card-title">Automation Suite</h3>
+            <p class="card-description">Streamline your workflows with intelligent automation tools.</p>
+            <a href="#" class="card-link" aria-label="Learn more about Automation Suite">Learn More →</a>
+          </article>
+          
+          <!-- Medium Product Card -->
+          <article class="product-card card-medium" role="listitem">
+            <div class="card-icon" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Analytics Engine icon">
+                <title>Analytics Engine icon</title>
+                <rect width="48" height="48" rx="8" fill="rgba(255,255,255,0.1)"/>
+                <path d="M12 24H36M24 12V36" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="24" cy="24" r="8" stroke="white" stroke-width="2"/>
+              </svg>
+            </div>
+            <h3 class="card-title">Analytics Engine</h3>
+            <p class="card-description">Real-time data analytics and insights for informed decision-making.</p>
+            <a href="#" class="card-link" aria-label="Learn more about Analytics Engine">Learn More →</a>
+          </article>
+          
+          <!-- Small Product Card -->
+          <article class="product-card card-small" role="listitem">
+            <div class="card-icon" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cloud Services icon">
+                <title>Cloud Services icon</title>
+                <rect width="48" height="48" rx="8" fill="rgba(255,255,255,0.1)"/>
+                <path d="M16 20L24 12L32 20M16 28L24 36L32 28" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3 class="card-title">Cloud Services</h3>
+            <p class="card-description">Scalable cloud infrastructure solutions.</p>
+            <a href="#" class="card-link" aria-label="Learn more about Cloud Services">Learn More →</a>
+          </article>
+          
+          <!-- Small Product Card -->
+          <article class="product-card card-small" role="listitem">
+            <div class="card-icon" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="API Gateway icon">
+                <title>API Gateway icon</title>
+                <rect width="48" height="48" rx="8" fill="rgba(255,255,255,0.1)"/>
+                <rect x="14" y="14" width="20" height="20" rx="2" stroke="white" stroke-width="2"/>
+                <path d="M20 14V34M28 14V34M14 20H34M14 28H34" stroke="white" stroke-width="2"/>
+              </svg>
+            </div>
+            <h3 class="card-title">API Gateway</h3>
+            <p class="card-description">Secure and efficient API management.</p>
+            <a href="#" class="card-link" aria-label="Learn more about API Gateway">Learn More →</a>
+          </article>
+          
+          <!-- Small Product Card -->
+          <article class="product-card card-small" role="listitem">
+            <div class="card-icon" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Integration Hub icon">
+                <title>Integration Hub icon</title>
+                <rect width="48" height="48" rx="8" fill="rgba(255,255,255,0.1)"/>
+                <path d="M24 16L28 20L24 24L20 20L24 16Z" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                <path d="M16 24L20 28L16 32L12 28L16 24Z" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                <path d="M32 24L36 28L32 32L28 28L32 24Z" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3 class="card-title">Integration Hub</h3>
+            <p class="card-description">Connect all your tools seamlessly.</p>
+            <a href="#" class="card-link" aria-label="Learn more about Integration Hub">Learn More →</a>
+          </article>
+          
+          <!-- Large Product Card -->
+          <article class="product-card card-large" role="listitem">
+            <div class="card-icon" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Security Platform icon">
+                <title>Security Platform icon</title>
+                <rect width="48" height="48" rx="8" fill="rgba(255,255,255,0.1)"/>
+                <path d="M12 18L24 12L36 18V30L24 36L12 30V18Z" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                <path d="M12 18L24 24M24 24L36 18M24 24V36" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3 class="card-title">Security Platform</h3>
+            <p class="card-description">Enterprise-grade security solutions with advanced threat detection and real-time monitoring capabilities.</p>
+            <a href="#" class="card-link" aria-label="Learn more about Security Platform">Learn More →</a>
+          </article>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Founder Section -->
+    <section class="section" id="founder" aria-labelledby="founder-heading">
+      <div class="section-container reveal">
+        <h2 id="founder-heading" class="section-title">Founder</h2>
+        <p class="section-text">Content coming soon...</p>
+      </div>
+    </section>
+    
+    <!-- Contact Section -->
+    <section class="section" id="contact" aria-labelledby="contact-heading">
+      <div class="section-container reveal">
+        <h2 id="contact-heading" class="section-title">Contact</h2>
+        <p class="section-text">Content coming soon...</p>
+      </div>
+    </section>
+  </main>
+  
+  <!-- Footer -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-container">
+      <p>&copy; 2024 SAVIGN. All rights reserved.</p>
+    </div>
+  </footer>
+  
+  <!--
+    IMAGE OPTIMIZATION PATTERN:
+    For future images, use this pattern for optimal performance:
+    
+    Above-the-fold images (no lazy loading):
+    <picture>
+      <source srcset="./assets/images/image.webp" type="image/webp">
+      <source srcset="./assets/images/image.jpg" type="image/jpeg">
+      <img src="./assets/images/image.jpg" alt="Description" width="800" height="600">
+    </picture>
+    
+    Below-the-fold images (with lazy loading):
+    <picture>
+      <source srcset="./assets/images/image.webp" type="image/webp">
+      <source srcset="./assets/images/image.jpg" type="image/jpeg">
+      <img src="./assets/images/image.jpg" alt="Description" width="800" height="600" loading="lazy">
+    </picture>
+    
+    Responsive images with multiple sizes:
+    <picture>
+      <source srcset="./assets/images/image-small.webp 400w,
+                      ./assets/images/image-medium.webp 800w,
+                      ./assets/images/image-large.webp 1200w"
+              type="image/webp"
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 800px">
+      <source srcset="./assets/images/image-small.jpg 400w,
+                      ./assets/images/image-medium.jpg 800w,
+                      ./assets/images/image-large.jpg 1200w"
+              type="image/jpeg"
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 800px">
+      <img src="./assets/images/image-medium.jpg" alt="Description" width="800" height="600" loading="lazy">
+    </picture>
+  -->
+  
+  <!-- JavaScript - Deferred for performance (see task 7.3) -->
+  <script src="./js/menu.js" defer></script>
+  <script src="./js/scroll-reveal.js" defer></script>
+  <script src="./js/touch-handler.js" defer></script>
+  <script src="./js/main.js" defer></script>
+</body>
+</html>

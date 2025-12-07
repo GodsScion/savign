@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Touch Optimization Test</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #050505;
+      color: white;
+    }
+    .test-section {
+      margin: 20px 0;
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+    }
+    .test-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem 2rem;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: white;
+      text-decoration: none;
+      margin: 10px;
+      touch-action: manipulation;
+      min-width: 44px;
+      min-height: 44px;
+    }
+    .test-button:active {
+      transform: scale(0.98);
+      background: rgba(255,255,255,0.15);
+    }
+    .touch-active {
+      opacity: 0.7 !important;
+    }
+    .result {
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(0,255,0,0.1);
+      border-radius: 4px;
+    }
+    .pass { color: #0f0; }
+    .fail { color: #f00; }
+  </style>
+</head>
+<body>
+  <h1>Touch Optimization Test</h1>
+  
+  <div class="test-section">
+    <h2>Test 1: Touch Target Size (44x44px minimum)</h2>
+    <button class="test-button" id="test-btn-1">Test Button</button>
+    <a href="#" class="test-button" id="test-link-1">Test Link</a>
+    <div id="result-1" class="result"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Test 2: Touch Action (No Double-Tap Zoom)</h2>
+    <button class="test-button" id="test-btn-2">Tap Twice Quickly</button>
+    <div id="result-2" class="result"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Test 3: Touch Feedback (Active State)</h2>
+    <button class="test-button" id="test-btn-3">Touch Me</button>
+    <div id="result-3" class="result"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Test 4: Touch Device Detection</h2>
+    <div id="result-4" class="result"></div>
+  </div>
+  
+  <script>
+    // Test 1: Check touch target sizes
+    function testTouchTargetSize() {
+      const btn = document.getElementById('test-btn-1');
+      const link = document.getElementById('test-link-1');
+      const result = document.getElementById('result-1');
+      
+      const btnRect = btn.getBoundingClientRect();
+      const linkRect = link.getBoundingClientRect();
+      
+      const btnPass = btnRect.width >= 44 && btnRect.height >= 44;
+      const linkPass = linkRect.width >= 44 && linkRect.height >= 44;
+      
+      result.innerHTML = `
+        <div class="${btnPass ? 'pass' : 'fail'}">
+          Button: ${btnRect.width.toFixed(0)}x${btnRect.height.toFixed(0)}px ${btnPass ? '✓' : '✗'}
+        </div>
+        <div class="${linkPass ? 'pass' : 'fail'}">
+          Link: ${linkRect.width.toFixed(0)}x${linkRect.height.toFixed(0)}px ${linkPass ? '✓' : '✗'}
+        </div>
+      `;
+    }
+    
+    // Test 2: Check touch-action property
+    function testTouchAction() {
+      const btn = document.getElementById('test-btn-2');
+      const result = document.getElementById('result-2');
+      
+      const style = window.getComputedStyle(btn);
+      const touchAction = style.touchAction || style.msTouchAction;
+      
+      const pass = touchAction === 'manipulation';
+      
+      result.innerHTML = `
+        <div class="${pass ? 'pass' : 'fail'}">
+          touch-action: ${touchAction} ${pass ? '✓' : '✗'}
+        </div>
+        <div>Try double-tapping the button - it should not zoom</div>
+      `;
+    }
+    
+    // Test 3: Touch feedback
+    function testTouchFeedback() {
+      const btn = document.getElementById('test-btn-3');
+      const result = document.getElementById('result-3');
+      
+      let touchStarted = false;
+      let touchEnded = false;
+      
+      btn.addEventListener('touchstart', () => {
+        touchStarted = true;
+        btn.classList.add('touch-active');
+        updateResult();
+      }, { passive: true });
+      
+      btn.addEventListener('touchend', () => {
+        touchEnded = true;
+        btn.classList.remove('touch-active');
+        updateResult();
+      }, { passive: true });
+      
+      function updateResult() {
+        result.innerHTML = `
+          <div class="${touchStarted ? 'pass' : ''}">
+            Touch Start: ${touchStarted ? '✓' : 'Waiting...'}
+          </div>
+          <div class="${touchEnded ? 'pass' : ''}">
+            Touch End: ${touchEnded ? '✓' : 'Waiting...'}
+          </div>
+        `;
+      }
+      
+      result.innerHTML = '<div>Touch the button to test feedback</div>';
+    }
+    
+    // Test 4: Touch device detection
+    function testTouchDetection() {
+      const result = document.getElementById('result-4');
+      
+      const hasTouch = 'ontouchstart' in window ||
+                       navigator.maxTouchPoints > 0 ||
+                       navigator.msMaxTouchPoints > 0;
+      
+      result.innerHTML = `
+        <div class="${hasTouch ? 'pass' : ''}">
+          Touch Support: ${hasTouch ? 'Yes ✓' : 'No (using mouse/trackpad)'}
+        </div>
+        <div>ontouchstart: ${'ontouchstart' in window}</div>
+        <div>maxTouchPoints: ${navigator.maxTouchPoints}</div>
+      `;
+    }
+    
+    // Run tests
+    window.addEventListener('load', () => {
+      testTouchTargetSize();
+      testTouchAction();
+      testTouchFeedback();
+      testTouchDetection();
+    });
+  </script>
+</body>
+</html>

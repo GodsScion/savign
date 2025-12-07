@@ -1,0 +1,173 @@
+/* Base Styles and Typography */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-normal);
+  color: var(--color-text);
+  background-color: var(--color-background);
+  font-weight: var(--font-weight-normal);
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+}
+
+h3 {
+  font-size: var(--font-size-h3);
+}
+
+p {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-normal);
+}
+
+/* Mobile Typography Adjustments */
+@media (max-width: 1023px) {
+  h1, h2, h3, h4, h5, h6 {
+    line-height: var(--line-height-normal);
+  }
+}
+
+/* Desktop Typography Adjustments */
+@media (min-width: 1024px) {
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: var(--letter-spacing-tight);
+  }
+}
+
+/* Links */
+a {
+  color: var(--color-text);
+  -webkit-transition: opacity var(--transition-fast);
+  -o-transition: opacity var(--transition-fast);
+  transition: opacity var(--transition-fast);
+}
+
+a:hover {
+  opacity: 0.8;
+}
+
+a:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+a:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+a:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Buttons */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-transition: -webkit-transform var(--transition-fast), opacity var(--transition-fast);
+  transition: -webkit-transform var(--transition-fast), opacity var(--transition-fast);
+  -o-transition: transform var(--transition-fast), opacity var(--transition-fast);
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+  transition: transform var(--transition-fast), opacity var(--transition-fast), -webkit-transform var(--transition-fast);
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button:active {
+  -webkit-transform: scale(0.98);
+  -ms-transform: scale(0.98);
+  transform: scale(0.98);
+}
+
+button:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+button:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Utility Classes */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Enhanced focus indicators for better keyboard navigation visibility */
+*:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+/* Ensure focus is visible on all interactive elements */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+/* Skip to main content link - for keyboard navigation accessibility */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  z-index: 10000;
+  padding: 1rem 1.5rem;
+  background-color: var(--color-text);
+  color: var(--color-background);
+  font-weight: var(--font-weight-bold);
+  text-decoration: none;
+  -webkit-border-radius: 0 0 var(--radius-sm) 0;
+  border-radius: 0 0 var(--radius-sm) 0;
+  -webkit-transition: top var(--transition-fast);
+  -o-transition: top var(--transition-fast);
+  transition: top var(--transition-fast);
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
