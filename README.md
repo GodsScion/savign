@@ -110,4 +110,4 @@ The site will be available at: `https://godsscion.github.io/savign/`
 
 ## License
 
-Copyright © 2024 SAVIGN. All rights reserved.
+Copyright © 2025 SAVIGN. All rights reserved.
