@@ -235,8 +235,9 @@ function findDeclarations(css, vars, property, isBanned) {
     .map((declaration) => declaration.text);
 }
 
+// "mono" anywhere catches monospace, ui-monospace and compound names such as GeistMono-Regular or IBMPlexMono.
 const MONO_FONT =
-  /\bmono(?:space)?\b|menlo|consolas|courier|monaco|fira\s*code|jetbrains\s*mono|sf\s*mono|source\s*code\s*pro/i;
+  /mono|menlo|consolas|courier|monaco|fira\s*code|source\s*code\s*pro/i;
 
 export function findMonoFonts(css, vars = customProperties(css)) {
   return findDeclarations(css, vars, "font(?:-family)?", (value) =>
@@ -271,7 +272,7 @@ function isPillRadius(value) {
     return true;
   }
   const lengths = value.matchAll(
-    /(\d*\.?\d+)(px|r?em|%|[dsl]?v(?:h|w|min|max))/gi,
+    /(\d*\.?\d+(?:e[+-]?\d+)?)(px|r?em|%|[dsl]?v(?:h|w|min|max))/gi,
   );
   return [...lengths].some((match) => isPillLength(Number(match[1]), match[2]));
 }
@@ -287,9 +288,30 @@ export function findPillRadius(css, vars = customProperties(css)) {
   return [...radii, ...utilities];
 }
 
+const TIMING_TOKEN =
+  /^(?:-?\d*\.?\d+m?s|ease(?:-in|-out|-in-out)?|linear|step-start|step-end|allow-discrete|normal)$/i;
+const TIMING_FUNCTION = /(?:cubic-bezier|steps|linear)\([^()]*\)/gi;
+
+// A transition item with no property name, like `transition: 0.2s`, transitions all properties.
+function isTransitionAllItem(item) {
+  const tokens = item.trim().split(/\s+/).filter(Boolean);
+  if (tokens.some((token) => /^all$/i.test(token))) {
+    return true;
+  }
+  return tokens.length > 0 && tokens.every((token) => TIMING_TOKEN.test(token));
+}
+
+function isTransitionAll(value) {
+  const items = value.replace(TIMING_FUNCTION, "linear").split(",");
+  return items.some(isTransitionAllItem);
+}
+
 export function findTransitionAll(css, vars = customProperties(css)) {
-  return findDeclarations(css, vars, "transition(?:-property)?", (value) =>
-    /(?<![\w-])all(?![\w-])/i.test(value),
+  return findDeclarations(
+    css,
+    vars,
+    "transition(?:-property)?",
+    isTransitionAll,
   );
 }
 
@@ -348,8 +370,70 @@ function normalised(text) {
 }
 
 // Rule 26: each value must be shown on the home page, not only set in app/company.ts.
+const VOID_TAGS = new Set([
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "source",
+  "track",
+  "wbr",
+]);
+const HIDDEN_ATTRIBUTE =
+  /\s(?:hidden(?=[\s=/>])|aria-hidden\s*=\s*["']?true\b)/i;
+
+// Index just past the tag that closes the element opened at start, counting nested same-name tags.
+function elementEnd(html, start, name) {
+  const tags = new RegExp(`<(/?)${name}\\b[^>]*>`, "gi");
+  tags.lastIndex = start;
+  let depth = 0;
+  let match = tags.exec(html);
+  while (match) {
+    depth += match[1] ? -1 : 1;
+    if (depth === 0) {
+      return tags.lastIndex;
+    }
+    match = tags.exec(html);
+  }
+  return html.length;
+}
+
+export function withoutHiddenElements(html) {
+  const opening = /<([a-z][\w-]*)\b[^>]*>/gi;
+  let kept = "";
+  let cursor = 0;
+  let match = opening.exec(html);
+  while (match) {
+    if (HIDDEN_ATTRIBUTE.test(match[0])) {
+      const isVoid = VOID_TAGS.has(match[1].toLowerCase());
+      const end = isVoid
+        ? opening.lastIndex
+        : elementEnd(html, match.index, match[1]);
+      kept += html.slice(cursor, match.index);
+      cursor = end;
+      opening.lastIndex = end;
+    }
+    match = opening.exec(html);
+  }
+  return kept + html.slice(cursor);
+}
+
+// Text a visitor sees in the page body: no head, no title, no hidden or aria-hidden element.
+export function bodyText(html) {
+  const withoutHead = withoutScripts(html)
+    .replace(/<head\b[\s\S]*?<\/head>/gi, " ")
+    .replace(/<title\b[\s\S]*?<\/title>/gi, " ");
+  return visibleText(withoutHiddenElements(withoutHead));
+}
+
 export function fieldsNotShown(record, html) {
-  const shown = normalised(visibleText(html));
+  const shown = normalised(bodyText(html));
   return Object.entries(record)
     .filter(([, value]) => !isMissing(value))
     .filter(([, value]) => !shown.includes(normalised(String(value))))
@@ -577,6 +661,14 @@ async function main() {
 }
 
 // realpath, because a script run through a symlinked dir (macOS /var) has a resolved import.meta.url.
-if (import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
+function isEntryPoint() {
+  const entry = process.argv[1];
+  return (
+    Boolean(entry) &&
+    import.meta.url === pathToFileURL(realpathSync(entry)).href
+  );
+}
+
+if (isEntryPoint()) {
   await main();
 }

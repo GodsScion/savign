@@ -355,6 +355,14 @@ async function main() {
   }
 }
 
-if (import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
+function isEntryPoint() {
+  const entry = process.argv[1];
+  return (
+    Boolean(entry) &&
+    import.meta.url === pathToFileURL(realpathSync(entry)).href
+  );
+}
+
+if (isEntryPoint()) {
   await main();
 }

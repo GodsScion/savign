@@ -550,3 +550,78 @@ test("CLI exits 2 with usage on unknown flags and a bare --out", () => {
     assert.match(run.stderr, /usage: node scripts\/check\.mjs/);
   }
 });
+
+test("pill radius reads exponent lengths, the minified form of calc(infinity*1px)", () => {
+  for (const value of ["3.40282e38px", "1e4px", "9.99e2px", "1E+4px"]) {
+    assert.equal(findPillRadius(`a{border-radius:${value}}`).length, 1, value);
+  }
+  assert.deepEqual(findPillRadius("a{border-radius:1.2e1px}"), []);
+});
+
+test("a transition item with no property name counts as all", () => {
+  for (const value of [
+    "0.2s",
+    ".3s ease-in-out",
+    "200ms linear 50ms",
+    "opacity .2s, .3s",
+    "1s cubic-bezier(0.1, 0.2, 0.3, 1)",
+  ]) {
+    assert.equal(findTransitionAll(`a{transition:${value}}`).length, 1, value);
+  }
+  for (const value of [
+    "0.2s opacity",
+    "none",
+    "opacity 0.2s cubic-bezier(0.1, 0.2, 0.3, 1), color 1s",
+    "transform 1s steps(4, end)",
+  ]) {
+    assert.deepEqual(findTransitionAll(`a{transition:${value}}`), [], value);
+  }
+  const html = renderToString(
+    createElement("div", { style: { transition: "0.2s" } }, "x"),
+  );
+  assert.equal(findTransitionAll(htmlCss(html)).length, 1);
+});
+
+test("monospace rule catches compound family names", () => {
+  for (const font of [
+    "GeistMono-Regular",
+    "IBMPlexMono",
+    "GeistMonoVF",
+    "'Roboto Mono'",
+  ]) {
+    assert.equal(findMonoFonts(`p{font-family:${font},serif}`).length, 1, font);
+  }
+});
+
+test("fields not shown ignores the title and hidden elements", () => {
+  const company = { name: "SAVIGN Private Limited" };
+  const titleOnly =
+    "<html><head><title>SAVIGN Private Limited</title></head><body><h1>SAVIGN</h1></body></html>";
+  assert.deepEqual(fieldsNotShown(company, titleOnly), ["name"]);
+  const hiddenPages = [
+    "<body><div hidden><div>a</div><p>SAVIGN Private Limited</p></div></body>",
+    '<body><div aria-hidden="true">SAVIGN Private Limited</div></body>',
+    '<body><span hidden="">SAVIGN Private Limited</span></body>',
+  ];
+  for (const page of hiddenPages) {
+    assert.deepEqual(fieldsNotShown(company, page), ["name"], page);
+  }
+  const shownPages = [
+    "<body><div hidden><div>a</div></div><p>SAVIGN Private Limited</p></body>",
+    '<body><input hidden value="x"><p>SAVIGN Private Limited</p></body>',
+    '<body><p data-hidden="1" aria-hidden="false">SAVIGN Private Limited</p></body>',
+  ];
+  for (const page of shownPages) {
+    assert.deepEqual(fieldsNotShown(company, page), [], page);
+  }
+});
+
+test("importing check.mjs from node -e does not run or crash the CLI", () => {
+  const run = spawnSync(
+    process.execPath,
+    ["-e", `import(${JSON.stringify(join(SCRIPTS_DIR, "check.mjs"))})`],
+    { encoding: "utf8" },
+  );
+  assert.equal(run.status, 0, run.stderr);
+  assert.equal(run.stdout, "");
+});

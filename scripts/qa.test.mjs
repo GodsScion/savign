@@ -129,3 +129,15 @@ test("qa CLI exits 2 with usage on unknown flags or a missing output dir", () =>
     assert.match(run.stderr, /usage: node scripts\/qa\.mjs/);
   }
 });
+
+test("importing qa.mjs from node -e does not run or crash the CLI", () => {
+  const qa = join(dirname(fileURLToPath(import.meta.url)), "qa.mjs");
+  const run = spawnSync(
+    process.execPath,
+    ["-e", `import(${JSON.stringify(qa)})`],
+    {
+      encoding: "utf8",
+    },
+  );
+  assert.equal(run.status, 0, run.stderr);
+});

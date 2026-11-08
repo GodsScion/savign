@@ -25,10 +25,12 @@ const PROBE_FILES = {
   "next.config.mjs":
     'export default { output: "export", images: { unoptimized: true } };',
   "app/globals.css":
-    ":root { --pill: 9999px; }\n.pill { border-radius: var(--pill); }\n",
+    ":root { --pill: 9999px; }\n.pill { border-radius: var(--pill); }\n" +
+    ".endless { border-radius: calc(infinity * 1px); }\n" +
+    ".compound { font-family: GeistMono-Regular, serif; }\n",
   "app/layout.jsx": `import "./globals.css";
 export const metadata = {
-  title: "Probe",
+  title: "SAVIGN Private Limited",
   description: "Probe description — here",
 };
 export default function RootLayout({ children }) {
@@ -54,6 +56,9 @@ export default function Page() {
       </a>
       <div style={{ borderRadius: 9999, transition: "all 0.2s" }}>style</div>
       <div className="pill">pill</div>
+      <div className="endless">endless</div>
+      <p className="compound">compound</p>
+      <div style={{ transition: "0.2s" }}>bare transition</div>
       <code>probe</code>
       <p>{network} automation</p>
     </main>
@@ -103,9 +108,16 @@ test(
     assert.match(failures("dashes"), /description — here/, "meta description");
     assert.match(failures("pill"), /index\.html: border-radius:9999px/);
     assert.match(failures("pill"), /\.css: border-radius:var\(--pill\)/);
+    assert.match(
+      failures("pill"),
+      /\.css: border-radius:(?:\d.*e\+?\d+px|calc)/,
+    );
+    assert.match(failures("monospace font"), /GeistMono-Regular/);
+    assert.match(failures("transition"), /index\.html: transition:0\.2s/);
     assert.match(failures("transition"), /index\.html: transition:all 0\.2s/);
     assert.match(failures("monospace elements"), /<code>/);
     assert.match(failures("forbidden"), /LinkedIn automation/);
     assert.match(failures("company"), /cin is missing/);
+    assert.match(failures("company"), /name is not shown/, "title only");
   },
 );
