@@ -20,9 +20,12 @@ const scene = (name) => import(`../app/scene/${name}.ts`);
 const { poseForPath } = await scene("sections");
 const { pickLayout } = await scene("breakpoints");
 const { heroFrame } = await scene("compose");
-const { createWake, stampWake, stepWake } = await scene("wake");
+const { createWake, stampWake, stepWake, settleWake } = await scene("wake");
 const { tierFor, createFrameProbe, SLOW_WORK_SECONDS } = await scene("quality");
-const { wandererOn, WANDER_SECONDS } = await scene("pointer");
+const { wandererOn, WANDER_SECONDS, WANDER_AFTER_TOUCH_SECONDS } =
+  await scene("pointer");
+const { ACTIVE_SECONDS, firstActiveSeconds } = await scene("runtime");
+const { buildOrDispose } = await scene("build");
 const { markerPads } = await scene("words");
 const { poseFor } = await scene("poses");
 const { frameDelta } = await scene("driver");
@@ -153,11 +156,11 @@ test("quality tiers come from cores, memory and pointer", () => {
   );
 });
 
-function runProbe(workSeconds) {
+function runProbe(sampleAt) {
   const probe = createFrameProbe();
   const answers = [];
   for (let i = 0; i < 120; i += 1) {
-    const answer = probe(workSeconds);
+    const answer = probe(sampleAt(i));
     if (answer) {
       answers.push(answer);
     }
@@ -165,25 +168,78 @@ function runProbe(workSeconds) {
   return answers;
 }
 
-test("the quality probe judges frame work, answers once, and ignores display cadence", () => {
+// Replaces "the quality probe judges frame work, answers once, and ignores display cadence": the probe now
+// takes a frame sample (CPU work, GPU time, interval) instead of a bare work time.
+test("the quality probe answers once, on frame cost, and ignores a steady 30 Hz display", () => {
+  const light = { work: 0.004, gpu: null };
   assert.deepEqual(
-    runProbe(0.004),
+    runProbe(() => ({ ...light, interval: 1 / 30 })),
     ["ok"],
-    "light work at any cadence is fine",
+    "steady 30 Hz is fine",
   );
   assert.deepEqual(
-    runProbe(SLOW_WORK_SECONDS * 2),
+    runProbe(() => ({ ...light, interval: 1 / 60 })),
+    ["ok"],
+  );
+  assert.deepEqual(
+    runProbe(() => ({
+      work: SLOW_WORK_SECONDS * 2,
+      gpu: null,
+      interval: 1 / 60,
+    })),
     ["slow"],
-    "one probe, one answer",
+    "heavy CPU work, one answer",
   );
 });
 
-test("the wanderer runs on touch screens only, for 8 s after start and after each touch", () => {
+test("the quality probe sees a GPU bound device, by timer or by stretched frames", () => {
+  assert.deepEqual(
+    runProbe(() => ({
+      work: 0.003,
+      gpu: SLOW_WORK_SECONDS * 2,
+      interval: 1 / 60,
+    })),
+    ["slow"],
+    "GPU timer over budget",
+  );
+  assert.deepEqual(
+    runProbe((i) => ({
+      work: 0.003,
+      gpu: null,
+      interval: i < 12 ? 1 / 60 : 1 / 30,
+    })),
+    ["slow"],
+    "no timer: frames stretched to twice the warmup cadence",
+  );
+  assert.deepEqual(
+    runProbe((i) => ({
+      work: 0.003,
+      gpu: i < 12 ? null : 0.004,
+      interval: i < 12 ? 1 / 60 : 1 / 30,
+    })),
+    ["ok"],
+    "a timer that says the GPU is fine overrides the cadence proxy",
+  );
+});
+
+// Replaces "the wanderer runs on touch screens only, for 8 s after start and after each touch": after a touch
+// it now runs 4 s, inside the activity window.
+test("the wanderer runs on touch screens only, 8 s after start and 4 s after each touch", () => {
   assert.equal(wandererOn(3, 0, -100, false), false);
   assert.equal(wandererOn(3, 0, -100, true), true);
   assert.equal(wandererOn(WANDER_SECONDS + 1, 0, -100, true), false);
-  assert.equal(wandererOn(30, 0, 25, true), true);
-  assert.equal(wandererOn(30, 0, 20, true), false);
+  assert.equal(
+    wandererOn(30, 0, 30 - WANDER_AFTER_TOUCH_SECONDS + 0.5, true),
+    true,
+  );
+  assert.equal(
+    wandererOn(30, 0, 30 - WANDER_AFTER_TOUCH_SECONDS - 0.5, true),
+    false,
+  );
+  assert.ok(
+    WANDER_AFTER_TOUCH_SECONDS <= ACTIVE_SECONDS,
+    "the wanderer never outlives the activity window",
+  );
 });
 
 test("the five corridor markers sit beside the corridor, behind the letters, one after another", () => {
@@ -324,4 +380,79 @@ test("the scene runs on the site's one ticker: seconds in, busy out, and the loo
   );
   assert.equal(calls[0][0], 10.016);
   assert.ok(Math.abs(calls[1][1] - 0.016) < 1e-9);
+});
+
+test("a wake stamped at full energy is at rest within the activity window plus 1 s", () => {
+  const wake = createWake({ x: -10, z: -10, w: 20, d: 20 });
+  stampWake(wake, 0, 0, 3, 1);
+  const dt = 1 / 60;
+  let time = 0;
+  let moving = true;
+  while (moving && time < 30) {
+    if (time >= ACTIVE_SECONDS) {
+      settleWake(wake);
+    }
+    moving = stepWake(wake, dt);
+    time += dt;
+  }
+  assert.equal(moving, false);
+  assert.ok(
+    time <= ACTIVE_SECONDS + 1,
+    `the wake rested after ${time.toFixed(2)} s`,
+  );
+});
+
+test("a world build that throws releases the renderer first", () => {
+  let disposed = 0;
+  const renderer = { dispose: () => (disposed += 1) };
+  assert.throws(
+    () =>
+      buildOrDispose(renderer, () => {
+        throw new Error("2d canvas unavailable");
+      }),
+    /2d canvas unavailable/,
+  );
+  assert.equal(disposed, 1);
+  assert.equal(
+    buildOrDispose(renderer, () => 7),
+    7,
+  );
+  assert.equal(disposed, 1);
+});
+
+test("scene words light only in the hero: markers only during the walk, plaza words only on the hero", () => {
+  globalThis.window ??= { innerHeight: 900 };
+  const hero = (scrolled) =>
+    poseFor(
+      context("hero", {
+        probe: { pose: "hero", scrolled, progress: 0, rows: null },
+      }),
+      0.05,
+    ).world;
+  assert.equal(hero(0).markers, 0, "no markers at rest");
+  assert.equal(hero(0.6).markers, 1, "markers lit on the walk");
+  assert.equal(hero(0).words, 1);
+  for (const pose of [
+    "principles",
+    "work",
+    "project",
+    "founder",
+    "about",
+    "notes",
+    "note",
+    "contact",
+    "quiet",
+  ]) {
+    const world = poseFor(context(pose), 0.05).world;
+    assert.equal(world.markers, 0, `${pose} lights the corridor markers`);
+    assert.equal(world.words, 0, `${pose} lights the plaza words`);
+  }
+});
+
+test("the first activity window covers the intro, and the wanderer only on touch screens", () => {
+  assert.ok(
+    firstActiveSeconds(false) <= 6,
+    `desktop draws ${firstActiveSeconds(false)} s after start`,
+  );
+  assert.equal(firstActiveSeconds(true), WANDER_SECONDS);
 });

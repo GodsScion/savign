@@ -225,8 +225,12 @@ test(
       document.documentElement.classList.contains("lenis"),
     );
     await waitForScene(page);
+    // Pointer moves leave a wake on the hero; the scene must still be asleep within 6 s of the last input.
+    for (let step = 0; step <= 30; step += 1) {
+      await page.mouse.move(700 + step * 20, 260 + step * 4);
+      await page.waitForTimeout(16);
+    }
     await page.mouse.wheel(0, 600);
-    // The scene keeps drawing for about 4 s after the last input or scroll (its flicker and wake), then stops.
     await page.waitForTimeout(6000);
     const before = await page.evaluate(() => window.__frames);
     await page.waitForTimeout(1000);
