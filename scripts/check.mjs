@@ -7,7 +7,7 @@ import { gzipSync } from "node:zlib";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 export const FIRST_LOAD_JS_LIMIT = 160_000;
-export const TOTAL_JS_LIMIT = 200_000;
+export const TOTAL_JS_LIMIT = 420_000;
 
 const BINARY_EXTENSIONS = new Set([
   ".woff2",

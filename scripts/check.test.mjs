@@ -211,7 +211,7 @@ test("total JS counts unreferenced chunks against its own limit", async () => {
   });
   const results = await runChecks({ outDir, release: false });
   assert.deepEqual(resultFor(results, "first load JS").failures, []);
-  assert.match(resultFor(results, "total JS").failures[0], /over 200\.0 kB/);
+  assert.match(resultFor(results, "total JS").failures[0], /over 420\.0 kB/);
 });
 
 test("font row reports count, preloads and woff2 bytes without failing", async () => {
