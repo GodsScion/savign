@@ -40,9 +40,15 @@ export const floorFragment = /* glsl */ `
     return (1.0 - inBox) * step(y, uTextFloor);
   }
 
+  /** Fades the lit letters out toward the hero's bottom edge, so they never sit behind the next section's text. */
+  float aboveHeroEdge() {
+    float y = uViewHeight - gl_FragCoord.y;
+    return 1.0 - smoothstep(uTextFloor - uViewHeight * 0.15, uTextFloor, y);
+  }
+
   void main() {
     vec2 xz = vWorld.xz;
-    float reveal = revealAt(xz.x, 0.1) * uWordLight;
+    float reveal = revealAt(xz.x, 0.1) * uWordLight * aboveHeroEdge();
     float letters = texture2D(uSharp, rectUv(xz, uRect)).a * reveal;
     float soft = texture2D(uSoft, rectUv(xz, uRect)).a * reveal;
     vec2 plazaUv = rectUv(xz, uPlaza);

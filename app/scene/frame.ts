@@ -31,6 +31,8 @@ import { settleWake, stepWake } from "./wake";
 const FLIGHT_SECONDS = 2.2;
 const DEFAULT_RULE_PITCH = 112;
 const COPY_REFRESH_SECONDS = 0.5;
+/** Pages without a hero: no floor line (words are off there anyway, and the letters may show). */
+const NO_TEXT_FLOOR = 1e6;
 const FAST_KEYS: Array<keyof WorldState> = [
   "front",
   "channelLight",
@@ -212,7 +214,7 @@ function updateTextMask(rt: Runtime): void {
     box.set(0, 0, 0, 0);
   }
   const hero = document.querySelector('[data-scene="hero"]');
-  const floor = hero ? hero.getBoundingClientRect().bottom - 8 : 0;
+  const floor = hero ? hero.getBoundingClientRect().bottom - 8 : NO_TEXT_FLOOR;
   u.uTextFloor.value = floor * dpr;
   u.uViewHeight.value = rt.renderer.domElement.height;
 }
