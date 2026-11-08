@@ -6,9 +6,18 @@ export function bindFooterMark() {
   if (!mark) {
     return () => {};
   }
-  return onScrollFrame(() => {
-    const rect = mark.getBoundingClientRect();
-    const shown = clamp01((window.innerHeight - rect.top) / rect.height);
-    mark.style.clipPath = `inset(${((1 - shown) * 100).toFixed(2)}% 0 0 0)`;
+  let lastShown = -1;
+  return onScrollFrame({
+    measure: () => {
+      const rect = mark.getBoundingClientRect();
+      return clamp01((window.innerHeight - rect.top) / rect.height);
+    },
+    apply: (shown) => {
+      if (shown === lastShown) {
+        return;
+      }
+      lastShown = shown;
+      mark.style.clipPath = `inset(${((1 - shown) * 100).toFixed(2)}% 0 0 0)`;
+    },
   });
 }

@@ -11,17 +11,19 @@ export function bindHeader() {
   }
   const mayHide = prefersMotion();
   let lastY = window.scrollY;
-  return onScrollFrame(() => {
-    const y = window.scrollY;
-    header.classList.toggle("is-solid", y > SOLID_AFTER);
-    if (Math.abs(y - lastY) < DIRECTION_SLACK) {
-      return;
-    }
-    const goingDown = y > lastY;
-    header.classList.toggle(
-      "is-hidden",
-      mayHide && goingDown && y > HIDE_AFTER,
-    );
-    lastY = y;
+  return onScrollFrame({
+    measure: () => window.scrollY,
+    apply: (y) => {
+      header.classList.toggle("is-solid", y > SOLID_AFTER);
+      if (Math.abs(y - lastY) < DIRECTION_SLACK) {
+        return;
+      }
+      const goingDown = y > lastY;
+      header.classList.toggle(
+        "is-hidden",
+        mayHide && goingDown && y > HIDE_AFTER,
+      );
+      lastY = y;
+    },
   });
 }

@@ -3,6 +3,12 @@ import { clamp01, onScrollFrame } from "./scrollFrame";
 // Unlit words keep 3:1 contrast on the ground (large text), so the scrub never fails WCAG.
 const UNLIT = "var(--scrub-unlit)";
 
+type Line = {
+  element: HTMLElement;
+  words: HTMLElement[];
+  lastProgress: number;
+};
+
 function splitWords(element: HTMLElement) {
   if (element.dataset.split !== "true") {
     const words = (element.textContent ?? "").trim().split(/\s+/);
@@ -20,9 +26,7 @@ function splitWords(element: HTMLElement) {
 }
 
 // Progress runs from the line entering at 88% of the viewport to it reaching 45%.
-function lineProgress(element: HTMLElement) {
-  const top = element.getBoundingClientRect().top;
-  const height = window.innerHeight;
+function lineProgress(top: number, height: number) {
   return clamp01((height * 0.88 - top) / (height * 0.43));
 }
 
@@ -34,13 +38,31 @@ function brighten(words: HTMLElement[], progress: number) {
 }
 
 export function bindScrubWords() {
-  const lines = [
+  const lines: Line[] = [
     ...document.querySelectorAll<HTMLElement>("[data-scrub-words]"),
-  ];
-  const split = lines.map((line) => ({ line, words: splitWords(line) }));
-  return onScrollFrame(() => {
-    for (const { line, words } of split) {
-      brighten(words, lineProgress(line));
-    }
+  ].map((element) => ({
+    element,
+    words: splitWords(element),
+    lastProgress: -1,
+  }));
+  if (lines.length === 0) {
+    return () => {};
+  }
+  return onScrollFrame({
+    measure: () => {
+      const height = window.innerHeight;
+      return lines.map((line) =>
+        lineProgress(line.element.getBoundingClientRect().top, height),
+      );
+    },
+    apply: (progresses) => {
+      lines.forEach((line, index) => {
+        const progress = progresses[index];
+        if (progress !== line.lastProgress) {
+          line.lastProgress = progress;
+          brighten(line.words, progress);
+        }
+      });
+    },
   });
 }

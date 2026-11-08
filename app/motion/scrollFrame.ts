@@ -1,44 +1,45 @@
-// One rAF-batched scroll and resize loop that every scroll-linked effect shares.
-type Listener = () => void;
+// Scroll-linked effects on the shared ticker. Each frame where the scroll position or viewport changed, every
+// effect measures first and then applies, so layout is read once per frame and never after a style write.
+import { onFrame, wakeTicker } from "./ticker";
 
-const listeners = new Set<Listener>();
-let frame = 0;
+export type ScrollEffect<T> = {
+  measure: () => T;
+  apply: (measured: T) => void;
+};
 
-function runListeners() {
-  frame = 0;
-  for (const listener of listeners) {
-    listener();
+type AnyEffect = ScrollEffect<unknown>;
+
+const effects = new Set<AnyEffect>();
+let lastKey = "";
+let stopFrames: (() => void) | null = null;
+
+function viewKey() {
+  return `${window.scrollY}:${window.innerWidth}:${window.innerHeight}`;
+}
+
+function runEffects() {
+  const key = viewKey();
+  if (key === lastKey) {
+    return;
   }
+  lastKey = key;
+  const ordered = [...effects];
+  const measured = ordered.map((effect) => effect.measure());
+  ordered.forEach((effect, index) => effect.apply(measured[index]));
 }
 
-function schedule() {
-  if (frame === 0) {
-    frame = requestAnimationFrame(runListeners);
+export function onScrollFrame<T>(effect: ScrollEffect<T>) {
+  effects.add(effect as AnyEffect);
+  lastKey = "";
+  if (stopFrames === null) {
+    stopFrames = onFrame(runEffects);
   }
-}
-
-function attach() {
-  window.addEventListener("scroll", schedule, { passive: true });
-  window.addEventListener("resize", schedule, { passive: true });
-}
-
-function detach() {
-  window.removeEventListener("scroll", schedule);
-  window.removeEventListener("resize", schedule);
-  cancelAnimationFrame(frame);
-  frame = 0;
-}
-
-export function onScrollFrame(listener: Listener) {
-  listeners.add(listener);
-  if (listeners.size === 1) {
-    attach();
-  }
-  schedule();
+  wakeTicker();
   return () => {
-    listeners.delete(listener);
-    if (listeners.size === 0) {
-      detach();
+    effects.delete(effect as AnyEffect);
+    if (effects.size === 0 && stopFrames !== null) {
+      stopFrames();
+      stopFrames = null;
     }
   };
 }
