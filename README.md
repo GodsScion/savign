@@ -12,6 +12,7 @@ npm run build             # static export to out/
 npm run check             # gate over out/: copy rules, CSS rules, image sizes, JS budget
 npm test                  # unit tests for the gate and the QA server
 npm run test:build        # builds a probe Next app with every banned form planted; check must report each
+npm run test:out          # tests over the real out/; fails, not skips, when out/ is missing
 npm run lint && npm run format:check
 ```
 
@@ -25,7 +26,7 @@ takes screenshots, and exits 1 when performance or accessibility is under 90 or 
 
 ## Deploy
 
-A push to `main` runs `.github/workflows/deploy.yml`: install, lint, format check, tests, the probe build test, build,
+A push to `main` runs `.github/workflows/deploy.yml`: install, lint, format check, tests, the probe build test, build, the out/ tests,
 `check --release`,
 then publishes `out/` to GitHub Pages. Changes reach `main` only after the owner says ship it.
 

@@ -46,10 +46,12 @@ test("only the deploy job holds the Pages write and OIDC token", () => {
   assert.match(deploy, /id-token: write/);
 });
 
-test("the probe build test runs before the build and the release check after it", () => {
+// Replaces "the probe build test runs before the build and the release check after it": out/ tests joined the order.
+test("probe build test, build, out/ tests and release check run in that order", () => {
   const order = [
     "npm run test:build",
     "npm run build",
+    "npm run test:out",
     "npm run check -- --release",
   ];
   const positions = order.map((step) => WORKFLOW.indexOf(`run: ${step}`));
