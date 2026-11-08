@@ -50,6 +50,8 @@ export type PoseContext = {
   aspect: number;
   frame: Frame;
   probe: Probe;
+  /** Reduced motion: one still frame, so nothing may depend on live DOM positions. */
+  still: boolean;
 };
 
 export const RULES_HEIGHT = 70;
@@ -197,7 +199,7 @@ function principlesPose(ctx: PoseContext, unitsPerPx: number): Pose {
       wordLight: 0,
       front: CORRIDOR_END,
       flat: 1,
-      rules: 1 - smoothstep(0.3, 0.62, ctx.probe.progress),
+      rules: ctx.still ? 0 : 1 - smoothstep(0.3, 0.62, ctx.probe.progress),
       exposure: 0.9,
       fogScale: 0.25,
     },
@@ -293,7 +295,7 @@ function notesPose(ctx: PoseContext, note: boolean): Pose {
 
 function contactPose(ctx: PoseContext): Pose {
   const target = new Vector3(CLEARING.x, 0, CLEARING.z);
-  const anchor = anchorFor(ctx.layout, [0.44, 0.04], [0, -0.42], [0, -0.46]);
+  const anchor = anchorFor(ctx.layout, [0.44, -0.24], [0, -0.42], [0, -0.46]);
   return {
     name: "contact",
     shot: framedShot(

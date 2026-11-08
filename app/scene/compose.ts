@@ -85,12 +85,12 @@ export function heroFrame(
   if (best === aboveWidth) {
     const width = Math.min(aboveWidth, vw * (landscape ? 0.54 : 0.92));
     const wordHeight = width * aspect;
-    const nearCopy = copy.top - 48 - wordHeight * 1.1;
+    const nearCopy = copy.top - 40 - wordHeight * 0.7;
     const centerY = Math.max(
       HEADER + wordHeight,
       HEADER +
         aboveHeight * 0.45 +
-        (nearCopy - HEADER - aboveHeight * 0.45) * 0.75,
+        (nearCopy - HEADER - aboveHeight * 0.45) * (landscape ? 0.75 : 1),
     );
     const centerX = landscape ? vw - margin * 2 - width * 0.56 : vw / 2;
     return toFrame(centerX, centerY, width, vw, vh);

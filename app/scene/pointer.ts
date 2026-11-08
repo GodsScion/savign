@@ -6,10 +6,8 @@ export type PointerInput = {
   x: number;
   y: number;
   lastMove: number;
-  pressed: boolean;
+  lastTouchEnd: number;
   pressRequest: { x: number; y: number } | null;
-  touching: boolean;
-  everMoved: boolean;
   dispose: () => void;
 };
 
@@ -22,17 +20,14 @@ export function trackPointer(onInput: () => void): PointerInput {
     x: 0,
     y: 0,
     lastMove: -100,
-    pressed: false,
+    lastTouchEnd: -100,
     pressRequest: null,
-    touching: false,
-    everMoved: false,
     dispose: () => undefined,
   };
   const move = (x: number, y: number) => {
     input.x = x;
     input.y = y;
     input.lastMove = now();
-    input.everMoved = true;
     onInput();
   };
   const onPointerMove = (event: PointerEvent) => {
@@ -43,20 +38,18 @@ export function trackPointer(onInput: () => void): PointerInput {
   const onPointerDown = (event: PointerEvent) => {
     onInput();
     if (event.pointerType !== "touch" && event.button === 0) {
-      input.pressed = true;
       input.pressRequest = { x: event.clientX, y: event.clientY };
       move(event.clientX, event.clientY);
     }
   };
-  const onPointerUp = () => {
-    input.pressed = false;
-  };
   const onTouch = (event: TouchEvent) => {
     const touch = event.touches[0];
-    input.touching = Boolean(touch);
     if (touch) {
       move(touch.clientX, touch.clientY);
+      return;
     }
+    input.lastTouchEnd = now();
+    onInput();
   };
   const onLeave = () => {
     input.lastMove = -100;
@@ -64,7 +57,6 @@ export function trackPointer(onInput: () => void): PointerInput {
   const passive = { passive: true };
   window.addEventListener("pointermove", onPointerMove, passive);
   window.addEventListener("pointerdown", onPointerDown, passive);
-  window.addEventListener("pointerup", onPointerUp, passive);
   window.addEventListener("touchstart", onTouch, passive);
   window.addEventListener("touchmove", onTouch, passive);
   window.addEventListener("touchend", onTouch, passive);
@@ -72,7 +64,6 @@ export function trackPointer(onInput: () => void): PointerInput {
   input.dispose = () => {
     window.removeEventListener("pointermove", onPointerMove);
     window.removeEventListener("pointerdown", onPointerDown);
-    window.removeEventListener("pointerup", onPointerUp);
     window.removeEventListener("touchstart", onTouch);
     window.removeEventListener("touchmove", onTouch);
     window.removeEventListener("touchend", onTouch);
@@ -81,6 +72,23 @@ export function trackPointer(onInput: () => void): PointerInput {
   return input;
 }
 
-export function secondsSinceMove(input: PointerInput): number {
-  return now() - input.lastMove;
+export function secondsSinceMove(input: PointerInput, time: number): number {
+  return time - input.lastMove;
+}
+
+export const WANDER_SECONDS = 8;
+
+/** The idle wanderer runs on touch screens only, for 8 s after the scene starts and after each touch ends. */
+export function wandererOn(
+  time: number,
+  startedAt: number,
+  lastTouchEnd: number,
+  coarse: boolean,
+): boolean {
+  if (!coarse) {
+    return false;
+  }
+  return (
+    time - startedAt < WANDER_SECONDS || time - lastTouchEnd < WANDER_SECONDS
+  );
 }
