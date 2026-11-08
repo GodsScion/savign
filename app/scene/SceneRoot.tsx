@@ -37,6 +37,14 @@ function afterFirstPaint(task: () => void): () => void {
   };
 }
 
+/** The page keeps the server rendered fallback; in development the reason is logged. */
+function reportStartFailure(error: unknown): null {
+  if (process.env.NODE_ENV !== "production") {
+    console.warn("scene did not start", error);
+  }
+  return null;
+}
+
 export default function SceneRoot() {
   const pathname = usePathname();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -55,10 +63,14 @@ export default function SceneRoot() {
       return;
     }
     let cancelled = false;
+    let announced = false;
     const hooks = {
       onReady: () => {
         setReady(true);
-        window.dispatchEvent(new CustomEvent("scene:ready"));
+        if (!announced) {
+          announced = true;
+          window.dispatchEvent(new CustomEvent("scene:ready"));
+        }
       },
       onLost: () => {
         setReady(false);
@@ -70,7 +82,7 @@ export default function SceneRoot() {
         return;
       }
       const handle = await startScene(canvas, pathRef.current, hooks).catch(
-        () => null,
+        reportStartFailure,
       );
       if (cancelled) {
         handle?.dispose();
@@ -90,13 +102,10 @@ export default function SceneRoot() {
   }, []);
 
   return (
-    <>
-      <div className={styles.fallback} aria-hidden="true" />
-      <canvas
-        ref={canvasRef}
-        className={ready ? `${styles.canvas} ${styles.ready}` : styles.canvas}
-        aria-hidden="true"
-      />
-    </>
+    <canvas
+      ref={canvasRef}
+      className={ready ? `${styles.canvas} ${styles.ready}` : styles.canvas}
+      aria-hidden="true"
+    />
   );
 }
