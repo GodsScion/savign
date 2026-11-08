@@ -1,0 +1,9 @@
+node_modules
+.next
+out
+.gstack
+.vscode/launch.json
+.DS_Store
+*.log
+tsconfig.tsbuildinfo
+next-env.d.ts

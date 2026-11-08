@@ -1,0 +1,22 @@
+:root {
+  --ground: oklch(0.155 0.008 70);
+  --surface: oklch(0.195 0.01 70);
+  --line: oklch(0.32 0.01 70);
+  --ink: oklch(0.955 0.012 85);
+  --muted: oklch(0.74 0.014 80);
+  --accent: oklch(0.8 0.155 72);
+  --status-open-source: oklch(0.8 0.13 155);
+  --status-in-development: oklch(0.78 0.1 235);
+  --status-research: var(--accent);
+}
+
+html {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-text), Arial, sans-serif;
+}
+
+h1 {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 400;
+}
