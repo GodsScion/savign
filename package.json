@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "check": "node scripts/check.mjs",
-    "test": "node --test scripts/check.test.mjs scripts/qa.test.mjs",
+    "test": "node --test scripts/check.test.mjs scripts/qa.test.mjs scripts/workflow.test.mjs",
     "test:build": "node --test scripts/check.build.test.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
