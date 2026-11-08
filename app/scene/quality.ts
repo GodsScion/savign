@@ -7,6 +7,13 @@ export type Tier = {
   fieldScale: number;
 };
 
+export type DeviceHints = {
+  cores: number;
+  memory: number;
+  coarse: boolean;
+  breakpoint: Breakpoint;
+};
+
 type NavigatorWithMemory = Navigator & { deviceMemory?: number };
 
 const HIGH: Tier = { name: "high", dprCap: 2, antialias: true, fieldScale: 1 };
@@ -18,18 +25,25 @@ const LOW: Tier = {
   fieldScale: 0.72,
 };
 
-export function detectTier(breakpoint: Breakpoint): Tier {
-  const nav = navigator as NavigatorWithMemory;
-  const cores = nav.hardwareConcurrency ?? 4;
-  const memory = nav.deviceMemory ?? 8;
-  if (cores <= 4 || memory <= 4) {
+/** The tier decision on its own, so it can be tested without a browser. */
+export function tierFor(hints: DeviceHints): Tier {
+  if (hints.cores <= 4 || hints.memory <= 4) {
     return LOW;
   }
-  const coarse = window.matchMedia("(pointer: coarse)").matches;
-  if (breakpoint === "phone" || coarse) {
+  if (hints.breakpoint === "phone" || hints.coarse) {
     return MID;
   }
   return HIGH;
+}
+
+export function detectTier(breakpoint: Breakpoint): Tier {
+  const nav = navigator as NavigatorWithMemory;
+  return tierFor({
+    cores: nav.hardwareConcurrency ?? 4,
+    memory: nav.deviceMemory ?? 8,
+    coarse: window.matchMedia("(pointer: coarse)").matches,
+    breakpoint,
+  });
 }
 
 export function devicePixelRatioFor(tier: Tier): number {
@@ -38,25 +52,31 @@ export function devicePixelRatioFor(tier: Tier): number {
 
 const WARMUP_FRAMES = 12;
 const PROBE_FRAMES = 30;
-const SLOW_FRAME_SECONDS = 1 / 42;
+/** CPU time one frame may take (pointer, wake, uniforms, draw submission) before the tier is too heavy. */
+export const SLOW_WORK_SECONDS = 0.011;
 
-/** Times 30 frames after a short warmup; a slow median means the device cannot carry this tier. */
-export function createFrameProbe(): (dt: number) => "slow" | "ok" | null {
+export type FrameProbe = (workSeconds: number) => "slow" | "ok" | null;
+
+/**
+ * Times the work of 30 busy frames after a short warmup and answers once. It measures how long the scene's own
+ * frame takes, never the gap between frames, so a display or power mode that delivers 30 frames a second is not
+ * mistaken for a slow device. A probe answers once only, so one probe can cause at most one downgrade.
+ */
+export function createFrameProbe(): FrameProbe {
   const samples: number[] = [];
   let seen = 0;
-  return (dt) => {
+  return (workSeconds) => {
     seen += 1;
     if (seen <= WARMUP_FRAMES || samples.length >= PROBE_FRAMES) {
       return null;
     }
-    samples.push(dt);
+    samples.push(workSeconds);
     if (samples.length < PROBE_FRAMES) {
       return null;
     }
     const sorted = [...samples].sort((a, b) => a - b);
-    return sorted[Math.floor(sorted.length / 2)] > SLOW_FRAME_SECONDS
-      ? "slow"
-      : "ok";
+    const median = sorted[Math.floor(sorted.length / 2)];
+    return median > SLOW_WORK_SECONDS ? "slow" : "ok";
   };
 }
 
