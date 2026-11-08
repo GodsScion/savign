@@ -224,8 +224,10 @@ test(
     await page.waitForFunction(() =>
       document.documentElement.classList.contains("lenis"),
     );
+    await waitForScene(page);
     await page.mouse.wheel(0, 600);
-    await page.waitForTimeout(2000);
+    // The scene keeps drawing for about 4 s after the last input or scroll (its flicker and wake), then stops.
+    await page.waitForTimeout(6000);
     const before = await page.evaluate(() => window.__frames);
     await page.waitForTimeout(1000);
     const idleFrames = (await page.evaluate(() => window.__frames)) - before;
@@ -233,6 +235,14 @@ test(
     await context.close();
   },
 );
+
+async function waitForScene(page) {
+  await page.waitForFunction(
+    () => document.querySelector("canvas")?.className.includes("ready"),
+    null,
+    { timeout: 20000 },
+  );
+}
 
 async function waitForLenis(page) {
   await page.waitForFunction(() =>
@@ -339,5 +349,53 @@ test(
       assert.ok(gap >= 32, `gap below the note hero is ${gap}px at ${width}`);
       await context.close();
     }
+  },
+);
+
+test(
+  "under reduced motion the scene draws one still frame and then no more",
+  { skip: SKIP ?? false },
+  async () => {
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      reducedMotion: "reduce",
+    });
+    await context.addInitScript(() => {
+      window.__frames = 0;
+      window.__draws = 0;
+      const original = window.requestAnimationFrame.bind(window);
+      window.requestAnimationFrame = (callback) => {
+        window.__frames += 1;
+        return original(callback);
+      };
+      const proto = WebGL2RenderingContext.prototype;
+      for (const name of [
+        "drawElements",
+        "drawArrays",
+        "drawElementsInstanced",
+        "drawArraysInstanced",
+      ]) {
+        const draw = proto[name];
+        proto[name] = function countedDraw(...args) {
+          window.__draws += 1;
+          return draw.apply(this, args);
+        };
+      }
+    });
+    const page = await context.newPage();
+    await page.goto(baseUrl, { waitUntil: "networkidle" });
+    await waitForScene(page);
+    await page.waitForTimeout(800);
+    const before = await page.evaluate(() => [window.__frames, window.__draws]);
+    assert.ok(before[1] > 0, "the still frame was never drawn");
+    await page.waitForTimeout(2000);
+    const after = await page.evaluate(() => [window.__frames, window.__draws]);
+    assert.equal(after[1] - before[1], 0, "draws after the still frame");
+    assert.equal(
+      after[0] - before[0],
+      0,
+      "animation frames requested after the still frame",
+    );
+    await context.close();
   },
 );
