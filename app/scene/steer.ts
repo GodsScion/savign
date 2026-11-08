@@ -9,7 +9,7 @@ import type { WorldState } from "./poses";
 import type { FloorPoint, Runtime } from "./runtime";
 import { stampSegment } from "./wake";
 
-const IDLE_SECONDS = 3.5;
+const IDLE_SECONDS = 3;
 const PARTING_SECONDS = 0.8;
 
 export function floorPointAt(

@@ -20,6 +20,8 @@ const ENERGY_HALF_LIFE = 1.1;
 const SPRING_STIFFNESS = 70;
 const SPRING_DAMPING = 9;
 const REST = 0.002;
+/** Cells this faint when the activity window ends are put back at once (their sink is under a tenth of a slab). */
+const SETTLE_SNAP = 0.1;
 
 export function createWake(rect: Rect): Wake {
   const count = rect.w * rect.d;
@@ -100,6 +102,24 @@ export function stampSegment(
       radius,
       amount,
     );
+  }
+}
+
+/**
+ * Ends the wake's tail when the activity window closes: faint cells are put back at once, and the rest lose their
+ * energy and spring back up, so the floor is at rest well within a second.
+ */
+export function settleWake(wake: Wake): void {
+  if (!wake.awake) {
+    return;
+  }
+  const { energy, sink, velocity } = wake;
+  for (let i = 0; i < energy.length; i += 1) {
+    if (energy[i] < SETTLE_SNAP) {
+      sink[i] = 0;
+      velocity[i] = 0;
+    }
+    energy[i] = 0;
   }
 }
 

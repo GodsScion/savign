@@ -77,8 +77,10 @@ export function secondsSinceMove(input: PointerInput, time: number): number {
 }
 
 export const WANDER_SECONDS = 8;
+/** After a touch the wanderer runs only as long as the scene's activity window, so drawing stops about 5 s later. */
+export const WANDER_AFTER_TOUCH_SECONDS = 4;
 
-/** The idle wanderer runs on touch screens only, for 8 s after the scene starts and after each touch ends. */
+/** The idle wanderer runs on touch screens only: 8 s after the scene starts, and 4 s after each touch ends. */
 export function wandererOn(
   time: number,
   startedAt: number,
@@ -89,6 +91,7 @@ export function wandererOn(
     return false;
   }
   return (
-    time - startedAt < WANDER_SECONDS || time - lastTouchEnd < WANDER_SECONDS
+    time - startedAt < WANDER_SECONDS ||
+    time - lastTouchEnd < WANDER_AFTER_TOUCH_SECONDS
   );
 }

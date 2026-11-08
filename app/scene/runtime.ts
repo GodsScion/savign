@@ -8,10 +8,11 @@ import {
   WebGLRenderer,
 } from "three";
 import type { Build } from "./build";
+import type { GpuTimer } from "./gpu-timer";
 import type { Rig } from "./camera";
 import type { CopyBox, Frame } from "./compose";
 import { createIntro, type Intro } from "./intro";
-import type { PointerInput } from "./pointer";
+import { WANDER_SECONDS, type PointerInput } from "./pointer";
 import type { WorldState } from "./poses";
 import { createFrameProbe, type FrameProbe, type Tier } from "./quality";
 
@@ -69,15 +70,23 @@ export type Runtime = {
   ndc: Vector2;
   hit: Vector3;
   scratch: Vector3;
+  gpuTimer: GpuTimer;
 };
 
 /** Seconds the scene keeps drawing after the last input, scroll or route change. */
 export const ACTIVE_SECONDS = 4;
 
+/** The first activity window covers the intro plus 4 s; on touch screens it also covers the 8 s wanderer. */
+export function firstActiveSeconds(coarse: boolean): number {
+  const base = 1.8 + ACTIVE_SECONDS;
+  return coarse ? Math.max(base, WANDER_SECONDS) : base;
+}
+
 export function createState(
   path: string,
   reduced: boolean,
   now: number,
+  coarse: boolean,
 ): SceneState {
   const intro = createIntro(reduced);
   return {
@@ -101,7 +110,7 @@ export function createState(
     probe: createFrameProbe(),
     downgrades: 0,
     startedAt: now,
-    activeUntil: now + 1.8 + ACTIVE_SECONDS,
+    activeUntil: now + firstActiveSeconds(coarse),
     lastScrollY: 0,
     flickerTime: 0,
   };
