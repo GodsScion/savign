@@ -8,8 +8,8 @@
   background:
     radial-gradient(
       ellipse 46% 30% at 56% 36%,
-      oklch(0.8 0.155 72 / 0.16),
-      oklch(0.8 0.155 72 / 0) 70%
+      var(--accent-glow),
+      var(--accent-clear) 70%
     ),
     var(--ground);
 }
@@ -63,8 +63,8 @@
 }
 
 .site-header.is-solid {
-  border-bottom-color: color-mix(in oklch, var(--line) 60%, transparent);
-  background: oklch(0.155 0.008 70 / 0.85);
+  border-bottom-color: var(--line-soft);
+  background: var(--ground-bar);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
@@ -72,6 +72,15 @@
 .site-header.is-hidden:not(:focus-within) {
   transform: translateY(-100%);
   transition-duration: 200ms;
+}
+
+/* Keyboard focus reveals a hidden header at once, never with a slide. */
+.site-header:focus-within {
+  transition: none;
+}
+
+html:not(.js) .clock {
+  display: none;
 }
 
 .site-header__inner {
@@ -295,14 +304,14 @@ html.menu-open {
 
 .button--quiet {
   border-color: var(--line);
-  background: oklch(0.155 0.008 70 / 0.5);
+  background: var(--ground-veil);
   color: var(--ink);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .button:hover {
-    background: oklch(0.86 0.13 76);
-    border-color: oklch(0.86 0.13 76);
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
   }
 
   .button--quiet:hover {
@@ -396,7 +405,7 @@ html.menu-open {
 
 .site-footer__legal {
   padding-block: var(--space-6) var(--space-7);
-  border-top: 1px solid color-mix(in oklch, var(--accent) 35%, var(--ground));
+  border-top: 1px solid var(--line);
   color: var(--muted);
   font-size: var(--text-sm);
   font-weight: 500;

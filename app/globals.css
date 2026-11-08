@@ -15,6 +15,17 @@
   --status-research: var(--accent);
   --scrim: oklch(0.155 0.008 70 / 0.82);
   --scrub-unlit: oklch(0.5 0.012 80);
+  --ground-clear: oklch(0.155 0.008 70 / 0);
+  --ground-veil: oklch(0.155 0.008 70 / 0.5);
+  --ground-vignette: oklch(0.155 0.008 70 / 0.62);
+  --ground-bar: oklch(0.155 0.008 70 / 0.85);
+  --ground-deep: oklch(0.155 0.008 70 / 0.9);
+  --ink-soft: oklch(0.86 0.013 82);
+  --accent-hover: oklch(0.86 0.13 76);
+  --accent-glow: oklch(0.8 0.155 72 / 0.16);
+  --accent-clear: oklch(0.8 0.155 72 / 0);
+  --line-soft: color-mix(in oklch, var(--line) 60%, transparent);
+  --accent-underline: color-mix(in oklch, var(--accent) 45%, transparent);
   --scrim-strong: oklch(0.155 0.008 70 / 0.92);
 
   /* Type */
@@ -41,7 +52,7 @@
   --space-10: 128px;
   --space-11: 160px;
   --section-pad: clamp(var(--space-8), 3rem + 5vw, var(--space-10));
-  --heading-gap: clamp(var(--space-6), 1.5rem + 1.5vw, var(--space-7));
+  --heading-gap: clamp(var(--space-6), 1rem + 2.5vw, var(--space-7));
   --gutter: clamp(20px, 5vw, 64px);
   --wrap: 1200px;
   --header-h: 72px;
@@ -202,7 +213,7 @@ html.lenis body {
 .text-link {
   color: var(--accent);
   text-decoration-line: underline;
-  text-decoration-color: color-mix(in oklch, var(--accent) 45%, transparent);
+  text-decoration-color: var(--accent-underline);
   transition: text-decoration-color 150ms ease;
 }
 
@@ -319,7 +330,7 @@ html.lenis body {
 
 .prose a {
   color: var(--accent);
-  text-decoration-color: color-mix(in oklch, var(--accent) 45%, transparent);
+  text-decoration-color: var(--accent-underline);
 }
 
 .prose a:hover {
@@ -336,7 +347,7 @@ html.lenis body {
 }
 
 .prose li::marker {
-  color: var(--accent);
+  color: var(--muted);
 }
 
 .prose strong {
@@ -346,7 +357,7 @@ html.lenis body {
 .prose blockquote {
   margin-inline: 0;
   padding-left: var(--space-5);
-  border-left: 1px solid var(--accent);
+  border-left: 1px solid var(--line);
   font-family: var(--font-serif);
   font-size: var(--text-lg);
   line-height: 1.45;
@@ -376,7 +387,7 @@ html.lenis body {
 .status {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
   font-size: var(--text-ui);
   font-weight: 500;
   line-height: 1.3;
@@ -560,4 +571,9 @@ html.lenis body {
 
 :where(h2, h3) + .company {
   margin-top: var(--space-6);
+}
+
+/* Anchor targets that receive focus only to set the keyboard start point draw no ring. */
+[tabindex="-1"]:focus {
+  outline: none;
 }

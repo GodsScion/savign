@@ -19,9 +19,9 @@
   pointer-events: none;
   background: radial-gradient(
     110% 62% at 0% 100%,
-    oklch(0.155 0.008 70 / 0.9) 0%,
-    oklch(0.155 0.008 70 / 0.62) 45%,
-    oklch(0.155 0.008 70 / 0) 80%
+    var(--ground-deep) 0%,
+    var(--ground-vignette) 45%,
+    var(--ground-clear) 80%
   );
 }
 
@@ -38,7 +38,7 @@
 
 .hero__lead {
   max-width: 36ch;
-  color: oklch(0.86 0.013 82);
+  color: var(--ink-soft);
 }
 
 .hero__actions {
@@ -220,7 +220,8 @@ html.motion .rise-armed.is-in > li {
 
 .founder__monogram {
   justify-self: end;
-  color: color-mix(in oklch, var(--accent) 38%, var(--ground));
+  padding-right: 0.14em;
+  color: var(--line);
   font-family: var(--font-serif);
   font-size: clamp(7rem, 4rem + 9vw, 14rem);
   font-style: italic;
@@ -274,7 +275,7 @@ html.motion .rise-armed.is-in > li {
 /* The scene behind the hero fades into the first scrimmed section with no seam. */
 .hero + .section {
   background: linear-gradient(
-    oklch(0.155 0.008 70 / 0),
+    var(--ground-clear),
     var(--scrim) min(36vh, 320px)
   );
 }

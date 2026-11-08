@@ -49,10 +49,14 @@ export function IndiaClock() {
 
   return (
     <p className="clock">
-      India{" "}
-      <time data-clock dateTime={reading?.iso}>
-        {reading ? `${reading.label} IST` : ""}
-      </time>
+      {reading ? (
+        <>
+          India{" "}
+          <time data-clock dateTime={reading.iso}>
+            {`${reading.label} IST`}
+          </time>
+        </>
+      ) : null}
     </p>
   );
 }
