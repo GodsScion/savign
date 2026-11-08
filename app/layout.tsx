@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
 import { SceneMount } from "./components/SceneMount";
+import { SITE_NAME, SITE_URL } from "./lib/seo";
 import { MotionRoot } from "./motion/MotionRoot";
 import "./globals.css";
 import "./components/shell.css";
@@ -26,10 +27,8 @@ const text = Geist({
 const motionFlags = `(function(){var c=document.documentElement.classList;c.add("js");if(matchMedia("(prefers-reduced-motion: no-preference)").matches){c.add("motion")}})();`;
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.savign.org"),
-  title: "SAVIGN | Tools that help AI agents do real work",
-  description:
-    "SAVIGN Private Limited is a software company from India. We build tools that help AI agents do real work.",
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
 };
 
 export const viewport: Viewport = {
@@ -53,6 +52,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           Skip to content
         </a>
         <div className="progress" data-progress aria-hidden="true" />
+        <div className="scene-fallback" aria-hidden="true" />
         <SceneMount />
         <Header />
         <div id="content" className="content" tabIndex={-1}>

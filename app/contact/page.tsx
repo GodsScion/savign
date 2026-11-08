@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { buildMetadata } from "@/app/lib/seo";
 import { company } from "../company";
 import { contactMeta } from "@/content/meta";
-import { CompanyInfo } from "./CompanyInfo";
+import { CompanyInfo } from "../components/CompanyInfo";
 
 export const metadata: Metadata = buildMetadata(contactMeta);
 

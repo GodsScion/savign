@@ -4,15 +4,13 @@ import { Arrow } from "./components/Arrow";
 import { CompanyInfo } from "./components/CompanyInfo";
 import { StatusLabel } from "./components/StatusLabel";
 import { awaitingConfirmation, entityLine } from "../content/site";
-import {
-  companyInfo,
-  contact,
-  founder,
-  hero,
-  principles,
-  work,
-} from "../content/home";
+import { contact, founder, hero, principles, work } from "../content/home";
+import { JsonLd, organizationJsonLd, websiteJsonLd } from "./lib/jsonld";
+import { buildMetadata } from "./lib/seo";
+import { homeMeta } from "../content/meta";
 import "./components/home.css";
+
+export const metadata = buildMetadata(homeMeta);
 
 function indexStyle(index: number) {
   return { "--i": index } as CSSProperties;
@@ -174,10 +172,12 @@ function Contact() {
           <p className="lead">{contact.body}</p>
         </div>
         <EmailLink />
-        <div id="company" className="contact__company">
-          <h3 className="contact__company-title">{companyInfo.heading}</h3>
-          <CompanyInfo />
-        </div>
+        <CompanyInfo
+          id="company"
+          className="contact__company"
+          headingId="company-title"
+          level={3}
+        />
       </div>
     </section>
   );
@@ -186,6 +186,7 @@ function Contact() {
 export default function Home() {
   return (
     <main id="main" className="home">
+      <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
       <Hero />
       <Work />
       <Principles />

@@ -4,7 +4,7 @@ import { awaitingConfirmation, navItems, wordmark } from "../../content/site";
 
 const buildYear = new Date().getFullYear();
 
-export function entityLine() {
+function legalLine() {
   return `© ${buildYear} ${company.name}, CIN ${company.cin ?? awaitingConfirmation}`;
 }
 
@@ -32,7 +32,7 @@ export function Footer() {
         {wordmark}
       </div>
       <div className="wrap site-footer__legal">
-        <p>{entityLine()}</p>
+        <p>{legalLine()}</p>
       </div>
     </footer>
   );
