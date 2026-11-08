@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
+import { buildMetadata } from "@/app/lib/seo";
 import { KeepReading } from "../notes/KeepReading";
 import { aboutMeta } from "@/content/meta";
 import { CompanyInfo } from "../contact/CompanyInfo";
 
-export const metadata: Metadata = {
-  title: aboutMeta.title,
-  description: aboutMeta.description,
-  alternates: { canonical: aboutMeta.path },
-};
+export const metadata: Metadata = buildMetadata(aboutMeta);
 
 const principles: { statement: string; support: string }[] = [
   {

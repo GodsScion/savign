@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
+import { buildMetadata } from "@/app/lib/seo";
 import Link from "next/link";
 import { notesMeta } from "@/content/meta";
 import { notes } from "@/content/notes";
 import { formatNoteDate } from "./date";
 
-export const metadata: Metadata = {
-  title: notesMeta.title,
-  description: notesMeta.description,
-  alternates: { canonical: notesMeta.path },
-};
+export const metadata: Metadata = buildMetadata(notesMeta);
 
 export default function NotesPage() {
   return (

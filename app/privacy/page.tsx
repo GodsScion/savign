@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
+import { buildMetadata } from "@/app/lib/seo";
 import Link from "next/link";
 import { privacyMeta } from "@/content/meta";
 
-export const metadata: Metadata = {
-  title: privacyMeta.title,
-  description: privacyMeta.description,
-  alternates: { canonical: privacyMeta.path },
-};
+export const metadata: Metadata = buildMetadata(privacyMeta);
 
 export default function PrivacyPage() {
   return (

@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
+import { JsonLd, profilePageJsonLd } from "@/app/lib/jsonld";
+import { buildMetadata } from "@/app/lib/seo";
 import Image from "next/image";
 import { KeepReading } from "../notes/KeepReading";
 import { founder, type Portrait } from "@/content/founder";
 import { founderMeta } from "@/content/meta";
 
-export const metadata: Metadata = {
-  title: founderMeta.title,
-  description: founderMeta.description,
-  alternates: { canonical: founderMeta.path },
-  openGraph: { type: "profile" },
-};
+export const metadata: Metadata = buildMetadata({
+  ...founderMeta,
+  type: "profile",
+});
 
 // Renders nothing until content/founder.ts has a portrait.
 function PortraitFigure({ portrait }: { portrait: Portrait | null }) {
@@ -32,6 +32,7 @@ function PortraitFigure({ portrait }: { portrait: Portrait | null }) {
 export default function FounderPage() {
   return (
     <main className="page" data-scene="founder">
+      <JsonLd data={profilePageJsonLd()} />
       <header className="page-hero">
         <h1>{founder.name}</h1>
         <p className="lead">{founder.hero}</p>

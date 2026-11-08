@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
+import { buildMetadata } from "@/app/lib/seo";
 import { company } from "../company";
 import { contactMeta } from "@/content/meta";
 import { CompanyInfo } from "./CompanyInfo";
 
-export const metadata: Metadata = {
-  title: contactMeta.title,
-  description: contactMeta.description,
-  alternates: { canonical: contactMeta.path },
-};
+export const metadata: Metadata = buildMetadata(contactMeta);
 
 function EmailLink({ email }: { email: string | null }) {
   if (!email) {

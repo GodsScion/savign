@@ -1,11 +1,19 @@
-// Title, description and path for every inner route; T5's buildMetadata consumes
-// these objects as they are. Note metadata is derived from content/notes.ts.
+// The single source of every route's title, description and path. app/lib/seo.ts
+// buildMetadata turns one of these into a page's head tags, the sitemap lists them
+// and scripts/og.mjs renders a card for each. Note entries come from content/notes.ts.
 import { notes } from "./notes";
 
 export type PageMeta = {
   title: string;
   description: string;
   path: string;
+};
+
+export const homeMeta: PageMeta = {
+  title: "SAVIGN | Tools that help AI agents do real work",
+  description:
+    "SAVIGN Private Limited is a software company from India. We build tools that help AI agents do real work.",
+  path: "/",
 };
 
 export const workMeta: PageMeta = {

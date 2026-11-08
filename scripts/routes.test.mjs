@@ -58,9 +58,16 @@ test("route titles and descriptions are unique", () => {
   assert.equal(descriptions.size, routeMeta.length);
 });
 
+// `npm test` runs before the build and skips this; `npm run test:out` sets REQUIRE_OUT=1
+// after the build, where a missing out/ fails instead of skipping.
+const outRequired = process.env.REQUIRE_OUT === "1";
+const outMissing = existsSync(outDir)
+  ? false
+  : "out/ is missing; run npm run build";
+
 test(
   "every route in content/meta.ts builds to out/<route>/index.html",
-  { skip: existsSync(outDir) ? false : "out/ is missing; run npm run build" },
+  { skip: outRequired ? false : outMissing },
   () => {
     const missing = routeMeta
       .map((meta) => join(outDir, meta.path, "index.html"))

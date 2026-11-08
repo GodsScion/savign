@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { projectMeta } from "@/content/meta";
+import { breadcrumbJsonLd, JsonLd } from "@/app/lib/jsonld";
+import { buildMetadata } from "@/app/lib/seo";
+import { projectMeta, workMeta } from "@/content/meta";
 import { projects, type Project, type TitledLine } from "@/content/projects";
 import { Breadcrumbs } from "../../notes/Breadcrumbs";
 import { KeepReading } from "../../notes/KeepReading";
@@ -19,12 +21,7 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const meta = projectMeta[slug];
-  return {
-    title: meta.title,
-    description: meta.description,
-    alternates: { canonical: meta.path },
-  };
+  return buildMetadata(projectMeta[slug]);
 }
 
 function nextProject(slug: string): Project {
@@ -65,6 +62,12 @@ export default async function ProjectPage({
 
   return (
     <main className="page" data-scene="project">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Work", path: workMeta.path },
+          { name: project.name, path: projectMeta[project.slug].path },
+        ])}
+      />
       <Breadcrumbs
         trail={[{ name: "Work", href: "/work/" }]}
         current={project.name}

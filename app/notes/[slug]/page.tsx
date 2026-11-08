@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { noteMeta } from "@/content/meta";
+import { articleJsonLd, breadcrumbJsonLd, JsonLd } from "@/app/lib/jsonld";
+import { buildMetadata } from "@/app/lib/seo";
+import { noteMeta, notesMeta } from "@/content/meta";
 import { notes, type Note, type NoteBlock } from "@/content/notes";
 import { projects } from "@/content/projects";
 import { Breadcrumbs } from "../Breadcrumbs";
@@ -22,13 +24,10 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const meta = noteMeta[slug];
+  const note = notes.find((candidate) => candidate.slug === slug);
   return {
-    title: meta.title,
-    description: meta.description,
-    alternates: { canonical: meta.path },
-    authors: [{ name: "Sai Vignesh Golla", url: "/founder/" }],
-    openGraph: { type: "article" },
+    ...buildMetadata({ ...noteMeta[slug], type: "article" }),
+    authors: [{ name: note?.author, url: "/founder/" }],
   };
 }
 
@@ -93,6 +92,15 @@ export default async function NotePage({
 
   return (
     <main className="page" data-scene="note">
+      <JsonLd
+        data={[
+          articleJsonLd(note),
+          breadcrumbJsonLd([
+            { name: "Notes", path: notesMeta.path },
+            { name: note.title, path: noteMeta[note.slug].path },
+          ]),
+        ]}
+      />
       <Breadcrumbs
         trail={[{ name: "Notes", href: "/notes/" }]}
         current={note.title}

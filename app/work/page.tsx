@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
+import { buildMetadata } from "@/app/lib/seo";
 import Link from "next/link";
 import { workMeta } from "@/content/meta";
 import { projects } from "@/content/projects";
 
-export const metadata: Metadata = {
-  title: workMeta.title,
-  description: workMeta.description,
-  alternates: { canonical: workMeta.path },
-};
+export const metadata: Metadata = buildMetadata(workMeta);
 
 export default function WorkPage() {
   return (
