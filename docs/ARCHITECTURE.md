@@ -241,6 +241,8 @@ from below. It lives in the root layout, so a route change moves the camera inst
 5. `sceneBusy` decides whether another frame is needed: intro running, camera or world still moving, wake moving,
    pointer lit, or a hero, about or contact pose within 4 s (`ACTIVE_SECONDS`) of the last input, scroll or route
    change. Only then does it draw, and `tick` returns that answer, so the shared loop sleeps when the scene rests.
+   When that window closes, `settleWake` ends the wake's tail at once, so the scene stops about 5 s after the last
+   input (measured: 4.5 s after a pointer sweep on desktop, 5.4 s after a touch drag on a phone).
 
 ### Concepts the code relies on
 
@@ -257,7 +259,10 @@ from below. It lives in the root layout, so a route change moves the camera inst
 - **The scroll walk.** In the hero pose the vertical lens shift tracks the scroll exactly for the first 0.42 of a
   viewport (`pageLock`, applied without a spring), so the word rides up with the page and never passes under the h1.
   Then the letters close, the camera drops into the corridor behind the I, and passes the five principle words lit
-  on pads beside it (`words.ts` `markerPads`). The principles pose looks straight down on a flattened floor whose
+  on pads beside it (`words.ts` `markerPads`). Those markers have their own light (`markers` in `WorldState`), on
+  only during the walk; the plaza words light only on the hero. Neither ever draws over text: `updateTextMask` passes
+  the hero copy box and the hero's bottom edge to the floor shader (`textFree`), which drops scene words inside
+  that box and anywhere below the hero, where the next section's text begins. The principles pose looks straight down on a flattened floor whose
   seams become hairlines placed at the section's own ruled rows (`updateRules`).
 - **Route flights.** A pose change switches the rig to a slower spring for 2.2 s, lifts the camera in proportion to
   the distance left (`flightLift`) so it arcs over the field, and dims exposure mid flight (`flightDip`).
@@ -293,9 +298,12 @@ from below. It lives in the root layout, so a route change moves the camera inst
   spreads uploads and compiles over separate tasks. If start ever shows as a long task, split `buildCells` next.
 - Per frame: one draw call for all slabs plus floor, sky and two haze sheets; the CPU side is the wake spring over
   the plaza grid (about 10,000 cells, skipped at rest). Fill rate is the GPU cost: pixel ratio is capped at 2 (1.5
-  on phones, 1 on the low tier). `quality.ts` times 30 busy frames of the scene's own work (not the gap between
-  frames, so a 30 Hz display is not "slow") and drops one tier per slow probe, at most twice.
-- At rest: no frames at all. The scene draws while busy (above) and stops about 4 s after the last input.
+  on phones, 1 on the low tier). `quality.ts` judges 30 busy frames by their cost: the scene's CPU work, or its GPU
+  time from `gpu-timer.ts` (EXT_disjoint_timer_query_webgl2) where the browser offers it. Without a timer, frames
+  that stretch past 1.5 times the warmup cadence stand in for GPU load; a steady 30 Hz display is not "slow". Each
+  probe answers once, so it drops at most one tier; there are at most two.
+- At rest: no frames at all. The scene draws while busy (above) and stops about 5 s after the last input. On touch
+  screens the wanderer runs for 8 s after the scene starts and 4 s after each touch.
 
 ### Resilience
 
