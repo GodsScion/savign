@@ -1,4 +1,9 @@
+/* Design system: tokens, base elements, browser surfaces, and the shared page classes every route uses. */
+
 :root {
+  color-scheme: dark;
+
+  /* Colour (DESIGN.md tokens, OKLCH only) */
   --ground: oklch(0.155 0.008 70);
   --surface: oklch(0.195 0.01 70);
   --line: oklch(0.32 0.01 70);
@@ -8,15 +13,594 @@
   --status-open-source: oklch(0.8 0.13 155);
   --status-in-development: oklch(0.78 0.1 235);
   --status-research: var(--accent);
+  --scrim: oklch(0.155 0.008 70 / 0.82);
+  --scrub-unlit: oklch(0.5 0.012 80);
+  --ground-clear: oklch(0.155 0.008 70 / 0);
+  --ground-veil: oklch(0.155 0.008 70 / 0.5);
+  --ground-vignette: oklch(0.155 0.008 70 / 0.62);
+  --ground-bar: oklch(0.155 0.008 70 / 0.85);
+  --ground-deep: oklch(0.155 0.008 70 / 0.9);
+  --ink-soft: oklch(0.86 0.013 82);
+  --accent-hover: oklch(0.86 0.13 76);
+  --accent-glow: oklch(0.8 0.155 72 / 0.16);
+  --accent-clear: oklch(0.8 0.155 72 / 0);
+  --line-soft: color-mix(in oklch, var(--line) 60%, transparent);
+  --accent-underline: color-mix(in oklch, var(--accent) 45%, transparent);
+  --scrim-strong: oklch(0.155 0.008 70 / 0.92);
+
+  /* Type */
+  --font-serif: var(--font-display), Georgia, serif;
+  --font-sans: var(--font-text), Arial, sans-serif;
+  --text-sm: 0.875rem;
+  --text-ui: 0.9375rem;
+  --text-base: clamp(1rem, 0.96rem + 0.18vw, 1.0625rem);
+  --text-lg: clamp(1.125rem, 1.02rem + 0.45vw, 1.375rem);
+  --text-xl: clamp(1.625rem, 1.25rem + 1.4vw, 2.5rem);
+  --text-2xl: clamp(2rem, 1.2rem + 3vw, 3.75rem);
+  --text-display: clamp(2.75rem, 1.4rem + 5.2vw, 6rem);
+
+  /* Space (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+  --space-11: 160px;
+  --section-pad: clamp(var(--space-8), 3rem + 5vw, var(--space-10));
+  --heading-gap: clamp(var(--space-6), 1rem + 2.5vw, var(--space-7));
+  --gutter: clamp(20px, 5vw, 64px);
+  --wrap: 1200px;
+  --header-h: 72px;
+
+  /* Shape */
+  --radius-0: 0;
+  --radius-1: 2px;
+  --radius-2: 8px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Base */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 html {
   background: var(--ground);
   color: var(--ink);
-  font-family: var(--font-text), Arial, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 100%;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--header-h) + var(--space-4));
+  scrollbar-color: var(--line) var(--ground);
+  accent-color: var(--accent);
+  caret-color: var(--accent);
+}
+
+html.motion:not(.lenis) {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  font-size: var(--text-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
 }
 
 h1 {
-  font-family: var(--font-display), Georgia, serif;
-  font-weight: 400;
+  font-size: var(--text-display);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: var(--text-2xl);
+}
+
+h3 {
+  font-size: var(--text-xl);
+}
+
+p,
+li,
+dd {
+  text-wrap: pretty;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--ground);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-1);
+}
+
+/* Lenis (smooth scroll on fine pointers only) */
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+/* Layout helpers */
+
+.wrap {
+  width: min(100% - 2 * var(--gutter), var(--wrap));
+  margin-inline: auto;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Text links: marigold is the link colour, underline appears on hover for quiet links. */
+
+.text-link {
+  color: var(--accent);
+  text-decoration-line: underline;
+  text-decoration-color: var(--accent-underline);
+  transition: text-decoration-color 150ms ease;
+}
+
+.text-link:hover {
+  text-decoration-color: var(--accent);
+}
+
+.arrow {
+  width: 1em;
+  height: 1em;
+  flex: none;
+  transition: transform 150ms var(--ease-out);
+}
+
+/* Shared class contract (BUILD-CONTRACT.md). Inner pages use these and add no global CSS. */
+
+.page {
+  position: relative;
+  padding: calc(
+      var(--header-h) + clamp(var(--space-8), 3rem + 6vw, var(--space-11))
+    )
+    max(var(--gutter), (100% - var(--wrap)) / 2) var(--section-pad);
+  background: var(--scrim);
+}
+
+.page > * + * {
+  margin-top: var(--section-pad);
+}
+
+.page-hero {
+  display: grid;
+  gap: var(--space-5);
+  max-width: var(--wrap);
+}
+
+.page-hero h1 {
+  max-width: 16ch;
+}
+
+.page-hero .lead {
+  margin-top: var(--space-2);
+}
+
+.lead {
+  max-width: 52ch;
+  color: var(--muted);
+  font-size: var(--text-lg);
+  line-height: 1.55;
+}
+
+.meta {
+  color: var(--muted);
+  font-size: var(--text-ui);
+  font-variant-numeric: tabular-nums;
+}
+
+.meta > .status {
+  margin-right: var(--space-5);
+}
+
+.meta + :not(.meta) {
+  margin-top: var(--space-7);
+}
+
+.breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-6);
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: var(--text-ui);
+}
+
+.breadcrumbs li + li::before {
+  content: "/";
+  margin-right: var(--space-2);
+  color: var(--line);
+}
+
+.breadcrumbs a {
+  text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.breadcrumbs [aria-current] {
+  color: var(--ink);
+}
+
+.prose {
+  max-width: 64ch;
+  font-size: var(--text-base);
+  line-height: 1.7;
+}
+
+.prose > * + * {
+  margin-top: 1.1em;
+}
+
+.prose h2 {
+  margin-top: 2.2em;
+  font-size: var(--text-xl);
+}
+
+.prose h3 {
+  margin-top: 1.8em;
+  font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.75rem);
+}
+
+.prose h2 + *,
+.prose h3 + * {
+  margin-top: 0.7em;
+}
+
+.prose a {
+  color: var(--accent);
+  text-decoration-color: var(--accent-underline);
+}
+
+.prose a:hover {
+  text-decoration-color: var(--accent);
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.25em;
+}
+
+.prose li + li {
+  margin-top: 0.4em;
+}
+
+.prose li::marker {
+  color: var(--muted);
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+.prose blockquote {
+  margin-inline: 0;
+  padding-left: var(--space-5);
+  border-left: 1px solid var(--line);
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  line-height: 1.45;
+}
+
+.prose figure {
+  margin-inline: 0;
+}
+
+.prose figcaption {
+  margin-top: var(--space-3);
+  color: var(--muted);
+  font-size: var(--text-ui);
+}
+
+.prose img {
+  height: auto;
+  border-radius: var(--radius-1);
+}
+
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin-block: 2.5em;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-ui);
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.status--dev {
+  color: var(--status-in-development);
+}
+
+.status--oss {
+  color: var(--status-open-source);
+}
+
+.status--research {
+  color: var(--status-research);
+}
+
+.rule-list {
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--line);
+}
+
+.rule-list__row {
+  position: relative;
+  border-top: 1px solid var(--line);
+  padding-block: clamp(var(--space-5), 1rem + 1.5vw, var(--space-7));
+}
+
+.rule-list__row:has(> .card-link) {
+  padding-block: 0;
+}
+
+.rule-list__row > .card-link {
+  padding-block: clamp(var(--space-5), 1rem + 1.5vw, var(--space-7));
+}
+
+.card-link {
+  position: relative;
+  display: block;
+  isolation: isolate;
+  color: inherit;
+  text-decoration: none;
+}
+
+.card-link::before {
+  content: "";
+  position: absolute;
+  inset: 0 calc(-1 * var(--space-4));
+  z-index: -1;
+  border-radius: var(--radius-1);
+  background: var(--surface);
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 220ms var(--ease-in-out);
+}
+
+.card-link:focus-visible::before {
+  clip-path: inset(0);
+  transition: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card-link:hover::before {
+    clip-path: inset(0);
+    transition-duration: 300ms;
+  }
+
+  .card-link:hover .arrow {
+    transform: translateX(3px);
+  }
+}
+
+.next-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  color: var(--accent);
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  line-height: 1.15;
+  text-decoration: none;
+}
+
+.next-link:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .next-link:hover .arrow {
+    transform: translateX(3px);
+  }
+}
+
+.company {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  padding: clamp(var(--space-5), 1rem + 2vw, var(--space-7));
+  border-radius: var(--radius-2);
+  background: var(--surface);
+  font-variant-numeric: tabular-nums;
+}
+
+.company > div {
+  display: contents;
+}
+
+.company dt,
+.company dd {
+  margin: 0;
+  padding-block: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+.company > dt:first-child,
+.company > dt:first-child + dd,
+.company > div:first-child > * {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.company > dt:nth-last-child(2),
+.company > dd:last-child,
+.company > div:last-child > * {
+  padding-bottom: 0;
+}
+
+.company dt {
+  padding-right: var(--space-5);
+  color: var(--muted);
+  font-size: var(--text-ui);
+}
+
+.company dd {
+  overflow-wrap: anywhere;
+}
+
+.company .is-pending {
+  color: var(--muted);
+  font-style: italic;
+}
+
+@media (max-width: 640px) {
+  .company {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .company dt {
+    padding-bottom: var(--space-1);
+  }
+
+  .company dd {
+    border-top: 0;
+    padding-top: 0;
+  }
+}
+
+/* Reduced motion: final states, no movement. */
+
+@media (prefers-reduced-motion: reduce) {
+  .arrow,
+  .card-link::before {
+    transition: none;
+  }
+}
+
+/* Zero specificity so a page layout rule (.page > * + *) can space these. */
+:where(.rule-list, .company) {
+  margin: 0;
+}
+
+:where(h2, h3) + .company {
+  margin-top: var(--space-6);
+}
+
+/* Anchor targets that receive focus only to set the keyboard start point draw no ring. */
+[tabindex="-1"]:focus {
+  outline: none;
+}
+
+/* A list of next links (keep reading, next project) reads as a plain stack, not bullets. */
+:where(ul, ol):has(> li > .next-link) {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+:where(h2, h3) + .rule-list {
+  margin-top: var(--space-6);
+}
+
+.rule-list__row > * + * {
+  margin-top: var(--space-2);
+}
+
+/* Inside an article (a note), the body starts a heading gap below the hero's meta lines. */
+article > .page-hero + * {
+  margin-top: var(--heading-gap);
 }
