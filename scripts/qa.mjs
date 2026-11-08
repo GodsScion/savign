@@ -1,5 +1,6 @@
-// Review-time QA over the built static export: Lighthouse mobile (median of 3) and Playwright screenshots.
-// Builds nothing. Usage: node scripts/qa.mjs <output-dir> [--site <dir>]
+// Review-time QA over the built static export: Lighthouse mobile and desktop (median of 3 each) and
+// Playwright screenshots. Exits 1 when a Lighthouse gate fails, unless --allow-fail (exploratory runs).
+// Builds nothing. Usage: node scripts/qa.mjs <output-dir> [--site <dir>] [--allow-fail]
 // QA_TOOLS points at a node_modules folder holding lighthouse, chrome-launcher and playwright-core;
 // QA_CHROME at a Chromium binary. Neither tool is a dependency of this repo.
 import { createServer } from "node:http";
@@ -7,6 +8,8 @@ import { readFile, mkdir, writeFile, stat } from "node:fs/promises";
 import { join, resolve, extname, dirname, sep } from "node:path";
 import { homedir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { parseArgs } from "node:util";
+import { realpathSync } from "node:fs";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const QA_TOOLS = process.env.QA_TOOLS;
@@ -32,6 +35,12 @@ const VARIANT_WIDTHS = [
   [1440, 900],
 ];
 const LIGHTHOUSE_RUNS = 3;
+const FORM_FACTORS = [
+  { name: "mobile", configPath: null },
+  { name: "desktop", configPath: "lighthouse/core/config/desktop-config.js" },
+];
+export const SCORE_GATES = { performance: 90, accessibility: 90 };
+export const CLS_LIMIT = 0.1;
 const SETTLE_MS = 600;
 
 const CONTENT_TYPES = {
@@ -50,28 +59,51 @@ const CONTENT_TYPES = {
   ".webmanifest": "application/manifest+json",
 };
 
-function parseArgs(argv) {
-  const siteFlag = argv.indexOf("--site");
-  const siteDir =
-    siteFlag === -1 ? join(REPO_ROOT, "out") : resolve(argv[siteFlag + 1]);
-  const siteValueIndex = siteFlag === -1 ? -1 : siteFlag + 1;
-  const positional = argv.filter((arg, index) => {
-    return !arg.startsWith("--") && index !== siteValueIndex;
-  });
-  if (positional.length !== 1) {
-    throw new Error("usage: node scripts/qa.mjs <output-dir> [--site <dir>]");
+const USAGE =
+  "usage: node scripts/qa.mjs <output-dir> [--site <dir>] [--allow-fail]";
+
+function readArgs(argv) {
+  try {
+    const { values, positionals } = parseArgs({
+      args: argv,
+      allowPositionals: true,
+      options: {
+        site: { type: "string" },
+        "allow-fail": { type: "boolean" },
+      },
+    });
+    if (positionals.length !== 1) {
+      throw new Error("expected exactly one output dir");
+    }
+    return { values, outputArg: positionals[0] };
+  } catch (error) {
+    console.error(`${error.message}\n${USAGE}`);
+    process.exit(2);
   }
-  const outputDir = resolve(positional[0]);
+}
+
+function cliArgs(argv) {
+  const { values, outputArg } = readArgs(argv);
+  const siteDir = values.site ? resolve(values.site) : join(REPO_ROOT, "out");
+  const outputDir = resolve(outputArg);
   if (outputDir === REPO_ROOT || outputDir.startsWith(REPO_ROOT + sep)) {
     throw new Error(
       `output dir ${outputDir} is inside the repo; pick a folder outside it`,
     );
   }
-  return { siteDir, outputDir };
+  return { siteDir, outputDir, allowFail: values["allow-fail"] ?? false };
 }
 
-async function resolveFile(siteDir, urlPath) {
-  const pathname = decodeURIComponent(urlPath.split(/[?#]/)[0]);
+function decodePath(urlPath) {
+  try {
+    return decodeURIComponent(urlPath.split(/[?#]/)[0]);
+  } catch {
+    return null;
+  }
+}
+
+// The file a request names, or null when it is missing or outside siteDir.
+export async function resolveFile(siteDir, pathname) {
   const target = resolve(siteDir, "." + pathname);
   if (target !== siteDir && !target.startsWith(siteDir + sep)) {
     return null;
@@ -83,9 +115,15 @@ async function resolveFile(siteDir, urlPath) {
   return info ? target : null;
 }
 
-async function serve(siteDir) {
+export async function serve(siteDir) {
   const server = createServer(async (request, response) => {
-    const file = await resolveFile(siteDir, request.url ?? "/");
+    const pathname = decodePath(request.url ?? "/");
+    if (pathname === null) {
+      response.writeHead(400, { "content-type": "text/plain; charset=utf-8" });
+      response.end("bad request");
+      return;
+    }
+    const file = await resolveFile(siteDir, pathname);
     const body = file ? await readFile(file).catch(() => null) : null;
     if (body) {
       response.writeHead(200, {
@@ -114,18 +152,19 @@ function toolImport(path) {
   return import(pathToFileURL(join(QA_TOOLS, path)).href);
 }
 
-async function lighthouseOnce(lighthouse, chromeLauncher, url) {
+async function lighthouseOnce(lighthouse, chromeLauncher, url, config) {
   const chrome = await chromeLauncher.launch({
     chromePath: QA_CHROME,
     chromeFlags: ["--headless=new"],
   });
   try {
-    const result = await lighthouse(url, {
+    const flags = {
       port: chrome.port,
       output: "json",
       logLevel: "error",
       onlyCategories: ["performance", "accessibility", "best-practices", "seo"],
-    });
+    };
+    const result = await lighthouse(url, flags, config);
     return result.lhr;
   } finally {
     await chrome.kill();
@@ -153,19 +192,41 @@ function summarise(reports) {
   };
 }
 
-async function runLighthouse(url, outputDir) {
+async function formFactorConfig(formFactor) {
+  if (!formFactor.configPath) {
+    return undefined;
+  }
+  return (await toolImport(formFactor.configPath)).default;
+}
+
+async function runLighthouse(url, outputDir, formFactor) {
   const { default: lighthouse } = await toolImport("lighthouse/core/index.js");
   const chromeLauncher = await toolImport("chrome-launcher/dist/index.js");
+  const config = await formFactorConfig(formFactor);
   const reports = [];
   for (let run = 1; run <= LIGHTHOUSE_RUNS; run++) {
-    const lhr = await lighthouseOnce(lighthouse, chromeLauncher, url);
+    const lhr = await lighthouseOnce(lighthouse, chromeLauncher, url, config);
     await writeFile(
-      join(outputDir, `lighthouse-${run}.json`),
+      join(outputDir, `lighthouse-${formFactor.name}-${run}.json`),
       JSON.stringify(lhr),
     );
     reports.push(lhr);
   }
   return summarise(reports);
+}
+
+// One line per gate a form factor misses: perf and accessibility at least 90, CLS at most 0.1.
+export function gateFailures(summaries) {
+  return Object.entries(summaries).flatMap(([name, summary]) => {
+    const scores = Object.entries(SCORE_GATES)
+      .filter(([key, floor]) => summary[key] < floor)
+      .map(([key, floor]) => `${name} ${key} ${summary[key]} < ${floor}`);
+    const cls =
+      summary.CLS > CLS_LIMIT
+        ? [`${name} CLS ${summary.CLS} > ${CLS_LIMIT}`]
+        : [];
+    return [...scores, ...cls];
+  });
 }
 
 async function scrollTo(page, percent) {
@@ -244,8 +305,35 @@ async function runScreenshots(url, outputDir) {
   }
 }
 
+async function lighthouseSummaries(url, outputDir) {
+  const summaries = {};
+  for (const formFactor of FORM_FACTORS) {
+    summaries[formFactor.name] = await runLighthouse(
+      url,
+      outputDir,
+      formFactor,
+    );
+    console.log(`Lighthouse ${formFactor.name}, median of ${LIGHTHOUSE_RUNS}`);
+    console.table(summaries[formFactor.name]);
+  }
+  return summaries;
+}
+
+export function reportGates(failures, allowFail) {
+  if (failures.length === 0) {
+    console.log("Lighthouse gates passed");
+    return;
+  }
+  console.error(`Lighthouse gates failed:\n  ${failures.join("\n  ")}`);
+  if (allowFail) {
+    console.error("--allow-fail: exiting 0 anyway");
+    return;
+  }
+  process.exitCode = 1;
+}
+
 async function main() {
-  const { siteDir, outputDir } = parseArgs(process.argv.slice(2));
+  const { siteDir, outputDir, allowFail } = cliArgs(process.argv.slice(2));
   await stat(join(siteDir, "index.html")).catch(() => {
     throw new Error(
       `${siteDir}/index.html is missing; run npm run build first`,
@@ -254,18 +342,19 @@ async function main() {
   await mkdir(outputDir, { recursive: true });
   const { server, url } = await serve(siteDir);
   try {
-    const summary = await runLighthouse(url, outputDir);
-    console.log("Lighthouse mobile, median of 3");
-    console.table(summary);
+    const summaries = await lighthouseSummaries(url, outputDir);
     await writeFile(
       join(outputDir, "lighthouse-summary.json"),
-      JSON.stringify(summary, null, 2),
+      JSON.stringify(summaries, null, 2),
     );
     await runScreenshots(url, outputDir);
     console.log(`screenshots and reports in ${outputDir}`);
+    reportGates(gateFailures(summaries), allowFail);
   } finally {
     server.close();
   }
 }
 
-await main();
+if (import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
+  await main();
+}
