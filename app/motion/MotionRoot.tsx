@@ -9,7 +9,11 @@ import { bindProgress } from "./progress";
 import { bindRise } from "./rise";
 import { prefersMotion } from "./scrollFrame";
 import { bindScrubWords } from "./scrubWords";
-import { startSmoothScroll, stopSmoothScroll } from "./smoothScroll";
+import {
+  settleSmoothScroll,
+  startSmoothScroll,
+  stopSmoothScroll,
+} from "./smoothScroll";
 
 function runAll(unbinds: Array<() => void>) {
   for (const unbind of unbinds) {
@@ -26,6 +30,12 @@ function usePersistentMotion() {
       stopSmoothScroll();
     };
   }, []);
+}
+
+function useSettleOnRoute(pathname: string) {
+  useEffect(() => {
+    settleSmoothScroll();
+  }, [pathname]);
 }
 
 function usePageMotion(pathname: string) {
@@ -48,6 +58,7 @@ function usePageMotion(pathname: string) {
 export function MotionRoot() {
   const pathname = usePathname();
   usePersistentMotion();
+  useSettleOnRoute(pathname);
   usePageMotion(pathname);
   return null;
 }

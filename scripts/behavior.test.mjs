@@ -233,3 +233,111 @@ test(
     await context.close();
   },
 );
+
+async function waitForLenis(page) {
+  await page.waitForFunction(() =>
+    document.documentElement.classList.contains("lenis"),
+  );
+}
+
+test(
+  "a route change mid inertia opens the new page at the top",
+  { skip: SKIP ?? false },
+  async () => {
+    const { context, page } = await openHome();
+    await waitForLenis(page);
+    await page.mouse.move(700, 450);
+    await page.mouse.wheel(0, 1600);
+    await page.waitForTimeout(250);
+    await page.evaluate(() =>
+      document.querySelector('.site-nav a[href="/work/"]').click(),
+    );
+    await page.waitForURL(/\/work\/$/);
+    await page.waitForTimeout(1500);
+    assert.equal(await page.evaluate(() => window.scrollY), 0);
+    await context.close();
+  },
+);
+
+test(
+  "Back right after a wheel restores the previous page, not the inertia",
+  { skip: SKIP ?? false },
+  async () => {
+    const { context, page } = await openHome();
+    await waitForLenis(page);
+    await page.evaluate(() =>
+      document.querySelector('.site-nav a[href="/work/"]').click(),
+    );
+    await page.waitForURL(/\/work\/$/);
+    await page.waitForTimeout(800);
+    await page.mouse.move(700, 450);
+    await page.mouse.wheel(0, 500);
+    await page.waitForTimeout(300);
+    await page.goBack();
+    await page.waitForURL(baseUrl);
+    await page.waitForTimeout(1500);
+    assert.equal(await page.evaluate(() => window.scrollY), 0);
+    await context.close();
+  },
+);
+
+test(
+  "a modified or non primary click on a # link is left to the browser",
+  { skip: SKIP ?? false },
+  async () => {
+    const { context, page } = await openHome();
+    await waitForLenis(page);
+    await page.evaluate(() => {
+      window.__prevented = [];
+      window.addEventListener("click", (event) => {
+        window.__prevented.push(event.defaultPrevented);
+      });
+    });
+    const link = page.locator('.hero a[href="#company"]');
+    await link.click({ modifiers: ["Meta"] });
+    await link.click({ modifiers: ["Shift"] });
+    await link.click({ modifiers: ["Alt"] });
+    // Control+click is a context menu click on macOS, and a middle click fires no click from Playwright, so
+    // both are dispatched as the events another platform would deliver.
+    await link.evaluate((element) => {
+      for (const init of [{ ctrlKey: true }, { button: 1 }]) {
+        element.dispatchEvent(
+          new MouseEvent("click", { bubbles: true, cancelable: true, ...init }),
+        );
+      }
+    });
+    assert.deepEqual(await page.evaluate(() => window.__prevented), [
+      false,
+      false,
+      false,
+      false,
+      false,
+    ]);
+    await context.close();
+  },
+);
+
+test(
+  "a note's first paragraph sits a heading gap below its meta lines",
+  { skip: SKIP ?? false },
+  async () => {
+    for (const width of [390, 768]) {
+      const context = await browser.newContext({
+        viewport: { width, height: 900 },
+      });
+      const page = await context.newPage();
+      await page.goto(
+        `${baseUrl}notes/browser-tools-token-cost-coding-agents/`,
+      );
+      const gap = await page.evaluate(() => {
+        const hero = document.querySelector("article > .page-hero");
+        const next = hero.nextElementSibling.firstElementChild;
+        return (
+          next.getBoundingClientRect().top - hero.getBoundingClientRect().bottom
+        );
+      });
+      assert.ok(gap >= 32, `gap below the note hero is ${gap}px at ${width}`);
+      await context.close();
+    }
+  },
+);

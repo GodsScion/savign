@@ -32,7 +32,21 @@ function samePageTarget(event: MouseEvent) {
 
 // Same page links glide with Lenis instead of jumping, then keep what a native jump gives: the hash in the
 // address bar and the focus start point at the target, so the skip link still works for keyboard users.
+function isPlainClick(event: MouseEvent) {
+  return (
+    !event.defaultPrevented &&
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey
+  );
+}
+
 function glideToAnchor(event: MouseEvent) {
+  if (!isPlainClick(event)) {
+    return;
+  }
   const found = lenis ? samePageTarget(event) : null;
   if (!lenis || !found) {
     return;
@@ -65,9 +79,11 @@ export async function startSmoothScroll() {
   const instance = new LenisClass({
     lerp: 0.1,
     autoRaf: false,
+    stopInertiaOnNavigate: true,
   });
   lenis = instance;
   document.addEventListener("click", glideToAnchor);
+  window.addEventListener("popstate", settleSmoothScroll);
   stopFrames = onFrame((time) => {
     if (time - instance.time > MAX_FRAME_GAP_MS) {
       instance.time = time - ONE_FRAME_MS;
@@ -80,10 +96,21 @@ export async function startSmoothScroll() {
 export function stopSmoothScroll() {
   generation++;
   document.removeEventListener("click", glideToAnchor);
+  window.removeEventListener("popstate", settleSmoothScroll);
   stopFrames?.();
   stopFrames = null;
   lenis?.destroy();
   lenis = null;
+}
+
+// Drops any glide or wheel inertia so a route change or Back lands where the browser puts it, not where the
+// old page's momentum was heading. A stopped Lenis (menu open) is left stopped.
+export function settleSmoothScroll() {
+  if (!lenis || lenis.isStopped) {
+    return;
+  }
+  lenis.stop();
+  lenis.start();
 }
 
 export function pauseSmoothScroll() {
