@@ -25,7 +25,7 @@ export const founder: Founder = {
     "Sai trained as an electronics engineer first. He earned a B.Tech in Electronics and Communication Engineering at Vellore Institute of Technology, then a master's in Computer Science at Stevens Institute of Technology.",
     "He likes the part of a system that has to be right. At Intuit he worked on QuickBooks, where payroll and banking data leave little room for error. He built services for earned wage access, a production AI agent, and the partner experiences behind the retirement benefits offering.",
     "At BackOps AI, enterprise deals were waiting on sign in and access rules the product did not have yet. Sai built the company's identity and security platform on his own in about three months. It brought single sign on, multi factor login and one access policy that every core service enforced, and he built its controls to SOC 2 Type 2, ISO and GDPR requirements.",
-    "SAVIGN carries that habit forward. The name comes from his own, and Vignesh comes from Vighnesha, the one who removes obstacles. He builds his tools in the open where he can, measures them before he trusts them, and keeps the code plain enough for anyone to check his work.",
+    "SAVIGN carries that habit forward. The name comes from his own, and Vignesh comes from Vighnesha, the one who removes obstacles. He measures his tools before he trusts them, and keeps the code plain enough for anyone to check his work.",
   ],
   built: [
     "An identity and security platform for BackOps AI, built on his own, with single sign on, multi factor login and multi tenant access control. It unblocked more than $1.5M in enterprise contracts.",
