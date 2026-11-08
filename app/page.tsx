@@ -23,6 +23,7 @@ function Hero() {
         <h1 id="hero-title" className="hero__title">
           {hero.lines.map((line, index) => (
             <span key={line} className="hero__line" style={indexStyle(index)}>
+              {index > 0 ? " " : null}
               {line}
             </span>
           ))}
