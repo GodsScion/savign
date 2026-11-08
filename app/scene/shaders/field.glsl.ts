@@ -17,6 +17,7 @@ export const fieldLight = /* glsl */ `
   uniform float uFront;
   uniform float uChannelStart;
   uniform float uChannelLight;
+  uniform float uMarkerLight;
   uniform float uHalf;
   uniform vec4 uPlots[4];
   uniform float uPlotLight;
@@ -94,7 +95,7 @@ export const fieldLight = /* glsl */ `
   }
 
   float padReveal(vec2 xz, float soften) {
-    return padInside(xz) * smoothstep(uFront, uFront + soften, xz.y) * uChannelLight;
+    return padInside(xz) * smoothstep(uFront, uFront + soften, xz.y) * uMarkerLight;
   }
 
   float padOpen(vec2 xz) {

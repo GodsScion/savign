@@ -14,6 +14,10 @@ export const floorFragment = /* glsl */ `
   ${fieldLight}
   ${shading}
   uniform vec4 uRules;
+  uniform float uWordsLight;
+  uniform vec4 uTextBox;
+  uniform float uTextFloor;
+  uniform float uViewHeight;
   uniform vec3 uLine;
   varying vec3 vWorld;
 
@@ -26,6 +30,14 @@ export const floorFragment = /* glsl */ `
     float u = (z - uRules.z) / uRules.y;
     float d = abs(fract(u + 0.5) - 0.5) / max(fwidth(u), 1e-5);
     return 1.0 - clamp(d - 0.25, 0.0, 1.0);
+  }
+
+  /** 0 over the hero copy box and below the hero (where the next section's text starts), in device pixels. */
+  float textFree() {
+    float y = uViewHeight - gl_FragCoord.y;
+    float x = gl_FragCoord.x;
+    float inBox = step(uTextBox.x, x) * step(x, uTextBox.z) * step(uTextBox.y, y) * step(y, uTextBox.w);
+    return (1.0 - inBox) * step(y, uTextFloor);
   }
 
   void main() {
@@ -47,10 +59,11 @@ export const floorFragment = /* glsl */ `
     col += uMari * plotGlow(xz) * 1.15 * tile;
     col += uMari * clearGlow(xz) * 1.25 * tile;
     col += uMari * wake.g * 0.85 * tile;
-    col += vec3(1.0, 0.86, 0.62) * words * smoothstep(0.08, 0.6, wake.g) * 1.6;
+    float textOpen = textFree();
+    col += vec3(1.0, 0.86, 0.62) * words * smoothstep(0.08, 0.6, wake.g) * 1.6 * uWordsLight * textOpen;
     col += uMari * lanternGlow(xz) * 1.6 * tile;
     col += uMari * padReveal(xz, 14.0) * 0.14 * tile;
-    col += vec3(1.0, 0.86, 0.62) * markerAt(xz) * 1.5;
+    col += vec3(1.0, 0.86, 0.62) * markerAt(xz) * 1.5 * textOpen;
 
     vec3 lit = applyFog(col, vWorld);
     lit = mix(lit, uLine, hairline(xz.y) * uRules.x);

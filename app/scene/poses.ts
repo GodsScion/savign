@@ -31,6 +31,10 @@ export type WorldState = {
   fogScale: number;
   wake: number;
   carve: number;
+  /** The corridor markers: lit only during the hero walk. */
+  markers: number;
+  /** The plaza words the wake uncovers: hero only. */
+  words: number;
 };
 
 /**
@@ -70,6 +74,8 @@ const BASE: WorldState = {
   fogScale: 0.85,
   wake: 0,
   carve: 1,
+  markers: 0,
+  words: 0,
 };
 
 type Anchor = [number, number];
@@ -178,6 +184,8 @@ function heroPose(ctx: PoseContext): Pose {
         smoothstep(0.06, 0.32, s) * (1 - 0.6 * smoothstep(0.55, 0.9, s)),
       exposure: 1 - 0.3 * smoothstep(0.5, 0.9, s),
       wake: 1 - smoothstep(0.08, 0.3, s),
+      markers: smoothstep(0.3, 0.45, s),
+      words: 1,
     },
   };
 }
