@@ -30,6 +30,7 @@ import {
 } from "./shaders/surface.glsl";
 import type { Wake } from "./wake";
 import type { Rect, Wordmark } from "./wordmark";
+import type { MarkerPad } from "./words";
 
 export type Uniforms = Record<string, IUniform>;
 
@@ -249,15 +250,38 @@ function sharedUniforms(
 
 export const CLEAR_COLOR = GROUND;
 
+/** The corridor markers: pads beside the corridor and the canvas their words are drawn on. */
+export type Markers = {
+  pads: MarkerPad[];
+  rect: Rect;
+  canvas: HTMLCanvasElement;
+};
+
+function markerUniforms(markers: Markers, texture: Texture): Uniforms {
+  const { rect, pads } = markers;
+  return {
+    uMarkers: { value: texture },
+    uMarkerRect: { value: new Vector4(rect.x, rect.z, rect.w, rect.d) },
+    uPads: {
+      value: pads.map((pad) => new Vector4(pad.x, pad.z, pad.halfW, pad.halfD)),
+    },
+  };
+}
+
 export function buildWorld(
   word: Wordmark,
   plaza: Rect,
   field: FieldBounds,
   wake: Wake,
   words: HTMLCanvasElement,
+  markers: Markers,
 ): World {
   const wordsTexture = canvasTexture(words);
-  const uniforms = sharedUniforms(word, plaza, field, wake, wordsTexture);
+  const markersTexture = canvasTexture(markers.canvas);
+  const uniforms = {
+    ...sharedUniforms(word, plaza, field, wake, wordsTexture),
+    ...markerUniforms(markers, markersTexture),
+  };
   const cells = buildCells(word, field);
   uniforms.uChannelStart.value = word.backZ + 4;
   const slabs = buildSlabs(cells, uniforms);
@@ -276,6 +300,7 @@ export function buildWorld(
       uniforms.uSharp.value,
       uniforms.uSoft.value,
       wordsTexture,
+      markersTexture,
       wake.texture,
     ],
   };

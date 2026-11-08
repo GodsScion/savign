@@ -4,6 +4,9 @@ export const fieldLight = /* glsl */ `
   uniform sampler2D uSoft;
   uniform sampler2D uWake;
   uniform sampler2D uWords;
+  uniform sampler2D uMarkers;
+  uniform vec4 uMarkerRect;
+  uniform vec4 uPads[5];
   uniform vec4 uRect;
   uniform vec4 uPlaza;
   uniform vec4 uField;
@@ -81,6 +84,28 @@ export const fieldLight = /* glsl */ `
     return exp(-d * d * 1.3) * uClear.w;
   }
 
+  float padInside(vec2 xz) {
+    float inside = 0.0;
+    for (int i = 0; i < 5; i++) {
+      vec2 d = abs(xz - uPads[i].xy) - uPads[i].zw;
+      inside = max(inside, step(max(d.x, d.y), 0.0));
+    }
+    return inside;
+  }
+
+  float padReveal(vec2 xz, float soften) {
+    return padInside(xz) * smoothstep(uFront, uFront + soften, xz.y) * uChannelLight;
+  }
+
+  float padOpen(vec2 xz) {
+    return step(0.05, padReveal(xz, 8.0));
+  }
+
+  float markerAt(vec2 xz) {
+    vec2 uv = rectUv(xz, uMarkerRect);
+    return texture2D(uMarkers, uv).a * insideUv(uv) * padReveal(xz, 14.0);
+  }
+
   vec4 wakeAt(vec2 xz) {
     vec2 uv = rectUv(xz, uPlaza);
     return texture2D(uWake, uv) * insideUv(uv);
@@ -102,7 +127,7 @@ export const fieldLight = /* glsl */ `
   float glowAt(vec2 xz) {
     float wake = wakeAt(xz).g * uWakeLight;
     return wordGlow(xz) + channelGlow(xz) * 0.55 + plotGlow(xz) * 0.55 + clearGlow(xz) * 0.6 + wake * 0.6
-      + lanternGlow(xz) * 0.45;
+      + lanternGlow(xz) * 0.45 + padReveal(xz, 14.0) * 0.12;
   }
 `;
 

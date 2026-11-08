@@ -49,6 +49,8 @@ export const floorFragment = /* glsl */ `
     col += uMari * wake.g * 0.85 * tile;
     col += vec3(1.0, 0.86, 0.62) * words * smoothstep(0.08, 0.6, wake.g) * 1.6;
     col += uMari * lanternGlow(xz) * 1.6 * tile;
+    col += uMari * padReveal(xz, 14.0) * 0.14 * tile;
+    col += vec3(1.0, 0.86, 0.62) * markerAt(xz) * 1.5;
 
     vec3 lit = applyFog(col, vWorld);
     lit = mix(lit, uLine, hairline(xz.y) * uRules.x);
