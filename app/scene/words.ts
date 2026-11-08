@@ -16,13 +16,16 @@ const PLAZA_PX_PER_UNIT = 10;
 const PLAZA_WORD_HEIGHT = 3.2;
 const SERIF = `Georgia, "Times New Roman", serif`;
 
-/** Spots around the wordmark, as fractions of the plaza, chosen so no word lands on the letters. */
+/**
+ * Spots behind and beside the wordmark, as fractions of the plaza, so no word lands on the letters or in front of
+ * them, where the hero copy sits on portrait screens (measured: a touch drag lit "every run" behind the h1).
+ */
 const SPOTS: Array<[number, number]> = [
-  [0.2, 0.78],
-  [0.74, 0.84],
-  [0.14, 0.2],
-  [0.86, 0.22],
-  [0.47, 0.93],
+  [0.16, 0.12],
+  [0.5, 0.09],
+  [0.84, 0.13],
+  [0.07, 0.42],
+  [0.93, 0.46],
 ];
 
 export function drawBuriedWords(plaza: Rect): HTMLCanvasElement {
