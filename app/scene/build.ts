@@ -60,6 +60,19 @@ export function buildFor(layout: Layout, tier: Tier): Build {
   return { layout, word, plaza, wake, world, scene };
 }
 
+/** Builds with `make`; if that throws, the renderer (and its GL context) is released before the error goes on. */
+export function buildOrDispose<T>(
+  renderer: { dispose: () => void },
+  make: () => T,
+): T {
+  try {
+    return make();
+  } catch (error) {
+    renderer.dispose();
+    throw error;
+  }
+}
+
 /** Uploads textures and compiles each material in its own task, so no single task blocks input for long. */
 export async function warmUp(
   renderer: WebGLRenderer,

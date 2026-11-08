@@ -17,11 +17,16 @@ import {
   type Pose,
   type WorldState,
 } from "./poses";
-import { createFrameProbe, devicePixelRatioFor, downgrade } from "./quality";
+import {
+  createFrameProbe,
+  devicePixelRatioFor,
+  downgrade,
+  type FrameSample,
+} from "./quality";
 import { markActive, type Runtime } from "./runtime";
 import { probeSections, type Probe } from "./sections";
 import { updatePointer } from "./steer";
-import { stepWake } from "./wake";
+import { settleWake, stepWake } from "./wake";
 
 const FLIGHT_SECONDS = 2.2;
 const DEFAULT_RULE_PITCH = 112;
@@ -150,6 +155,8 @@ function applyWorld(rt: Runtime, world: WorldState, time: number): void {
   u.uRise.value = state.intro.rise;
   u.uCarve.value = state.intro.carve * world.carve;
   u.uWakeLight.value = world.wake;
+  u.uMarkerLight.value = world.markers;
+  u.uWordsLight.value = world.words;
   u.uWordLight.value = world.wordLight;
   u.uFront.value = world.front;
   u.uChannelLight.value = world.channelLight;
@@ -184,14 +191,36 @@ function updateRules(rt: Runtime, probe: Probe, world: WorldState): void {
   rules.z = camera.position.z - (window.innerHeight / 2 - firstY) * unitsPerPx;
 }
 
+/**
+ * Where scene words may not draw, in device pixels from the top left: the hero copy box (with a margin) and
+ * everything below the hero, where the next section's text begins. Words only light in the hero pose.
+ */
+function updateTextMask(rt: Runtime): void {
+  const u = rt.build.world.uniforms;
+  const dpr = rt.renderer.getPixelRatio();
+  const copy = rt.state.copy;
+  const margin = 24;
+  const box = u.uTextBox.value;
+  if (copy) {
+    box.set(
+      (copy.left - margin) * dpr,
+      (copy.top - window.scrollY - margin) * dpr,
+      (copy.right + margin) * dpr,
+      (copy.bottom - window.scrollY + margin) * dpr,
+    );
+  } else {
+    box.set(0, 0, 0, 0);
+  }
+  const hero = document.querySelector('[data-scene="hero"]');
+  const floor = hero ? hero.getBoundingClientRect().bottom - 8 : 0;
+  u.uTextFloor.value = floor * dpr;
+  u.uViewHeight.value = rt.renderer.domElement.height;
+}
+
 /** Feeds one busy frame's work time to the probe; a slow answer drops one tier (at most twice, one per probe). */
-export function probeQuality(rt: Runtime, workSeconds: number): void {
+export function probeQuality(rt: Runtime, sample: FrameSample): void {
   const { state } = rt;
-  if (
-    state.downgrades >= 2 ||
-    rt.reduced ||
-    state.probe(workSeconds) !== "slow"
-  ) {
+  if (state.downgrades >= 2 || rt.reduced || state.probe(sample) !== "slow") {
     return;
   }
   rt.tier = downgrade(rt.tier);
@@ -272,11 +301,16 @@ export function renderPose(
   moveRig(rt, pose, dt, time, snap);
   const world = state.world ?? pose.world;
   const active = time < state.activeUntil;
+  if (!active) {
+    settleWake(rt.build.wake);
+    state.parting = null;
+  }
   if (active) {
     state.flickerTime += dt;
   }
   applyWorld(rt, world, time);
   updateRules(rt, probe, world);
+  updateTextMask(rt);
   if (!snap) {
     updatePointer(rt, dt, time, world);
   }
@@ -291,7 +325,9 @@ export function renderPose(
     lively: world.wake > 0.05,
   });
   if (busy || snap || !state.ready) {
+    rt.gpuTimer.begin();
     rt.renderer.render(rt.build.scene, rt.camera);
+    rt.gpuTimer.end();
   }
   if (!state.ready) {
     state.ready = true;

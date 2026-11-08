@@ -52,31 +52,62 @@ export function devicePixelRatioFor(tier: Tier): number {
 
 const WARMUP_FRAMES = 12;
 const PROBE_FRAMES = 30;
-/** CPU time one frame may take (pointer, wake, uniforms, draw submission) before the tier is too heavy. */
+/** Time one frame may cost (the scene's CPU work, or its GPU time where measurable) before the tier is too heavy. */
 export const SLOW_WORK_SECONDS = 0.011;
+/** Without a GPU timer: frames that stretch this much past the warmup cadence mean the GPU cannot keep up. */
+export const SLOW_INTERVAL_RATIO = 1.5;
 
-export type FrameProbe = (workSeconds: number) => "slow" | "ok" | null;
+/** One busy frame: CPU work in seconds, GPU time when a timer answered (else null), and the gap since the last frame. */
+export type FrameSample = {
+  work: number;
+  gpu: number | null;
+  interval: number;
+};
+
+export type FrameProbe = (sample: FrameSample) => "slow" | "ok" | null;
+
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)];
+}
+
+function quantile(values: number[], q: number): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor((sorted.length - 1) * q)];
+}
 
 /**
- * Times the work of 30 busy frames after a short warmup and answers once. It measures how long the scene's own
- * frame takes, never the gap between frames, so a display or power mode that delivers 30 frames a second is not
- * mistaken for a slow device. A probe answers once only, so one probe can cause at most one downgrade.
+ * Times 30 busy frames after a 12 frame warmup and answers once, so one probe causes at most one downgrade.
+ * The cost of a frame is its CPU work or, where the browser has a GPU timer, its GPU time, whichever is larger.
+ * With no GPU timer, frames that stretch past 1.5 times the warmup's own cadence stand in for GPU load; a display
+ * that runs at a steady 30 Hz keeps its cadence and is not called slow.
  */
 export function createFrameProbe(): FrameProbe {
-  const samples: number[] = [];
-  let seen = 0;
-  return (workSeconds) => {
-    seen += 1;
-    if (seen <= WARMUP_FRAMES || samples.length >= PROBE_FRAMES) {
+  const warmup: number[] = [];
+  const costs: number[] = [];
+  const intervals: number[] = [];
+  let sawGpu = false;
+  let answered = false;
+  return (sample) => {
+    if (answered) {
       return null;
     }
-    samples.push(workSeconds);
-    if (samples.length < PROBE_FRAMES) {
+    if (warmup.length < WARMUP_FRAMES) {
+      warmup.push(sample.interval);
       return null;
     }
-    const sorted = [...samples].sort((a, b) => a - b);
-    const median = sorted[Math.floor(sorted.length / 2)];
-    return median > SLOW_WORK_SECONDS ? "slow" : "ok";
+    sawGpu ||= sample.gpu !== null;
+    costs.push(Math.max(sample.work, sample.gpu ?? 0));
+    intervals.push(sample.interval);
+    if (costs.length < PROBE_FRAMES) {
+      return null;
+    }
+    answered = true;
+    const heavy = median(costs) > SLOW_WORK_SECONDS;
+    const stretched =
+      !sawGpu &&
+      median(intervals) > quantile(warmup, 0.25) * SLOW_INTERVAL_RATIO;
+    return heavy || stretched ? "slow" : "ok";
   };
 }
 

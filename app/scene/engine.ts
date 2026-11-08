@@ -12,7 +12,14 @@ import {
   WebGLRenderer,
 } from "three";
 import { pickLayout } from "./breakpoints";
-import { buildFor, disposeBuild, warmUp, yieldToMain } from "./build";
+import {
+  buildFor,
+  buildOrDispose,
+  disposeBuild,
+  warmUp,
+  yieldToMain,
+} from "./build";
+import { createGpuTimer } from "./gpu-timer";
 import { onFrame, wakeFrames } from "./driver";
 import { probeQuality, refreshCopy, renderPose, syncSize } from "./frame";
 import { hurryIntro } from "./intro";
@@ -60,9 +67,10 @@ async function createRuntime(
   const renderer = createRenderer(canvas, tier.antialias);
   renderer.setPixelRatio(devicePixelRatioFor(tier));
   await yieldToMain();
-  const build = buildFor(layout, tier);
+  const build = buildOrDispose(renderer, () => buildFor(layout, tier));
   await yieldToMain();
-  const state = createState(path, reduced, now());
+  const coarse = window.matchMedia("(pointer: coarse)").matches;
+  const state = createState(path, reduced, now(), coarse);
   const rt: Runtime = {
     canvas,
     renderer,
@@ -70,7 +78,7 @@ async function createRuntime(
     build,
     tier,
     reduced,
-    coarse: window.matchMedia("(pointer: coarse)").matches,
+    coarse,
     input: trackPointer(() => {
       markActive(state, now());
       if (!state.intro.done) {
@@ -84,6 +92,7 @@ async function createRuntime(
     ndc: new Vector2(),
     hit: new Vector3(),
     scratch: new Vector3(),
+    gpuTimer: createGpuTimer(renderer.getContext() as WebGL2RenderingContext),
   };
   return rt;
 }
@@ -92,7 +101,8 @@ function tick(rt: Runtime, time: number, dt: number): boolean {
   const started = performance.now();
   const busy = renderPose(rt, dt, time, false);
   if (busy) {
-    probeQuality(rt, (performance.now() - started) / 1000);
+    const work = (performance.now() - started) / 1000;
+    probeQuality(rt, { work, gpu: rt.gpuTimer.read(), interval: dt });
   }
   return busy || !rt.state.ready;
 }
