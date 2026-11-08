@@ -135,9 +135,11 @@ function Founder() {
             <Arrow />
           </Link>
         </div>
-        <span className="founder__monogram" aria-hidden="true">
-          SV
-        </span>
+        <span
+          className="founder__monogram"
+          data-monogram="SV"
+          aria-hidden="true"
+        />
       </div>
     </section>
   );

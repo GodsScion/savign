@@ -228,6 +228,10 @@ html.motion .rise-armed.is-in > li {
   user-select: none;
 }
 
+.founder__monogram::before {
+  content: attr(data-monogram);
+}
+
 @media (max-width: 899px) {
   .founder__grid {
     grid-template-columns: minmax(0, 1fr) auto;

@@ -386,8 +386,8 @@ html.menu-open {
   margin-top: clamp(var(--space-8), 8vw, var(--space-10));
   color: var(--accent);
   font-family: var(--font-serif);
-  font-size: min(calc((100vw - 2 * var(--gutter)) / 2.42), 31rem);
-  padding-bottom: 0.05em;
+  font-size: min(calc((100vw - 2 * var(--gutter)) / 2.46), 31rem);
+  padding-block: 0.1em 0.05em;
   letter-spacing: -0.02em;
   line-height: 0.74;
   text-align: center;
@@ -401,4 +401,16 @@ html.menu-open {
   font-size: var(--text-sm);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+}
+
+/* Reduced motion: the menu and header change state without travel. */
+@media (prefers-reduced-motion: reduce) {
+  .menu-sheet,
+  .menu-sheet[data-open="true"] {
+    transform: none;
+  }
+
+  .button:active {
+    transform: none;
+  }
 }
