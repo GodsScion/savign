@@ -13,17 +13,27 @@ type IdleWindow = Window & {
   cancelIdleCallback?: (handle: number) => void;
 };
 
-/** Runs `task` once the page has loaded and the main thread is idle, so three never competes with first paint. */
+/**
+ * Settle time after `load` before the scene may start. The h1 is the largest paint and lands right around `load`;
+ * starting the scene inside that window put its work in front of the h1 in Lighthouse's simulated phone load
+ * (LCP 4.4 s in 2 of 3 runs against 1.05 s without the scene, measured 2026-11-07).
+ */
+const SETTLE_MS = 700;
+
+/** Runs `task` after load, a settle delay and an idle moment, so three never competes with the first paint. */
 function afterFirstPaint(task: () => void): () => void {
   const idleWindow = window as IdleWindow;
   let idleHandle = 0;
   let timer = 0;
-  const schedule = () => {
+  const whenIdle = () => {
     if (idleWindow.requestIdleCallback) {
       idleHandle = idleWindow.requestIdleCallback(task, { timeout: 2500 });
     } else {
-      timer = window.setTimeout(task, 300);
+      task();
     }
+  };
+  const schedule = () => {
+    timer = window.setTimeout(whenIdle, SETTLE_MS);
   };
   if (document.readyState === "complete") {
     schedule();
