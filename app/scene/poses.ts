@@ -30,9 +30,19 @@ export type WorldState = {
   exposure: number;
   fogScale: number;
   wake: number;
+  carve: number;
 };
 
-export type Pose = { name: PoseName; shot: Shot; world: WorldState };
+/**
+ * pageLock is a vertical lens shift applied without a spring, so the hero word moves with the page exactly and
+ * never trails under the h1 during a fast scroll.
+ */
+export type Pose = {
+  name: PoseName;
+  shot: Shot;
+  world: WorldState;
+  pageLock?: number;
+};
 
 export type PoseContext = {
   layout: Layout;
@@ -57,6 +67,7 @@ const BASE: WorldState = {
   exposure: 1,
   fogScale: 0.85,
   wake: 0,
+  carve: 1,
 };
 
 type Anchor = [number, number];
@@ -149,18 +160,21 @@ function blendShots(from: Shot, to: Shot, t: number, lift: number): Shot {
 function heroPose(ctx: PoseContext): Pose {
   const s = Math.max(0, ctx.probe.scrolled);
   const rest = heroRest(ctx);
-  rest.shiftY += Math.min(s, 0.42) * 2;
   const dive = easeInOut(smoothstep(0.4, 0.95, s));
   const corridor = corridorShot(ctx, Math.max(0, s - 0.45) * 70, [0, 0]);
   const lift = rest.position.distanceTo(rest.target) * 0.1;
   return {
     name: "hero",
     shot: blendShots(rest, corridor, dive, lift),
+    pageLock: Math.min(s, 0.42) * 2 * (1 - dive),
     world: {
       ...BASE,
+      carve: 1 - smoothstep(0.32, 0.55, s),
       wordLight: 1 - 0.96 * smoothstep(0.28, 0.5, s),
       front: lerp(ctx.word.backZ + 16, CORRIDOR_END, smoothstep(0.1, 0.8, s)),
-      channelLight: smoothstep(0.06, 0.32, s),
+      channelLight:
+        smoothstep(0.06, 0.32, s) * (1 - 0.6 * smoothstep(0.55, 0.9, s)),
+      exposure: 1 - 0.3 * smoothstep(0.5, 0.9, s),
       wake: 1 - smoothstep(0.08, 0.3, s),
     },
   };

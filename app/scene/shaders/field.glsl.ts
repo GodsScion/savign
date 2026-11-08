@@ -8,6 +8,7 @@ export const fieldLight = /* glsl */ `
   uniform vec4 uPlaza;
   uniform vec4 uField;
   uniform float uCarve;
+  uniform float uWakeLight;
   uniform float uWordLight;
   uniform float uRise;
   uniform float uFront;
@@ -99,7 +100,7 @@ export const fieldLight = /* glsl */ `
   }
 
   float glowAt(vec2 xz) {
-    float wake = wakeAt(xz).g;
+    float wake = wakeAt(xz).g * uWakeLight;
     return wordGlow(xz) + channelGlow(xz) * 0.55 + plotGlow(xz) * 0.55 + clearGlow(xz) * 0.6 + wake * 0.6
       + lanternGlow(xz) * 0.45;
   }

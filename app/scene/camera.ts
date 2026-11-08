@@ -93,6 +93,7 @@ export function applyRig(
   shot: Shot,
   camera: PerspectiveCamera,
   aspect: number,
+  pageLock: number,
 ): void {
   const v = rig.axes.map((axis) => axis.value);
   camera.position.set(v[0], v[1] + flightLift(rig, shot), v[2]);
@@ -101,7 +102,7 @@ export function applyRig(
   camera.aspect = aspect;
   camera.updateProjectionMatrix();
   camera.projectionMatrix.elements[8] = -v[6];
-  camera.projectionMatrix.elements[9] = -v[7];
+  camera.projectionMatrix.elements[9] = -(v[7] + pageLock);
   camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
   camera.updateMatrixWorld();
 }

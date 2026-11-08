@@ -160,7 +160,10 @@ function worldSettled(current: WorldState, goal: WorldState): boolean {
 function dampWorld(current: WorldState, goal: WorldState, dt: number): void {
   for (const key of Object.keys(goal) as Array<keyof WorldState>) {
     const rate =
-      key === "front" || key === "channelLight" || key === "wordLight"
+      key === "front" ||
+      key === "channelLight" ||
+      key === "wordLight" ||
+      key === "carve"
         ? 6
         : 3.2;
     current[key] = damp(current[key], goal[key], rate, dt);
@@ -208,6 +211,7 @@ export async function startScene(
     height: 0,
     frameCount: 0,
     copyReadAt: -10,
+    pageLock: 0,
     ready: false,
     running: false,
     lost: false,
@@ -399,7 +403,8 @@ export async function startScene(
     const u = build.world.uniforms;
     u.uTime.value = time;
     u.uRise.value = state.intro.rise;
-    u.uCarve.value = state.intro.carve;
+    u.uCarve.value = state.intro.carve * world.carve;
+    u.uWakeLight.value = world.wake;
     u.uWordLight.value = world.wordLight;
     u.uFront.value = world.front;
     u.uChannelLight.value = world.channelLight;
@@ -477,11 +482,14 @@ export async function startScene(
       );
       dampWorld(state.world, pose.world, dt);
     }
+    state.pageLock =
+      pose.pageLock ?? (snap ? 0 : damp(state.pageLock, 0, 4, dt));
     applyRig(
       state.rig,
       pose.shot,
       camera,
       state.width / Math.max(1, state.height),
+      state.pageLock,
     );
     applyWorld(state.world, time);
     updateRules(probe, state.world);

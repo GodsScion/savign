@@ -220,6 +220,7 @@ function sharedUniforms(
       ),
     },
     uCarve: { value: 0 },
+    uWakeLight: { value: 1 },
     uWordLight: { value: 1 },
     uRise: { value: 0 },
     uFront: { value: 400 },
