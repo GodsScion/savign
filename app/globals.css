@@ -599,3 +599,8 @@ html.lenis body {
 .rule-list__row > * + * {
   margin-top: var(--space-2);
 }
+
+/* Inside an article (a note), the body starts a heading gap below the hero's meta lines. */
+article > .page-hero + * {
+  margin-top: var(--heading-gap);
+}
