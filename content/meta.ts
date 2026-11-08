@@ -1,5 +1,7 @@
-// Title, description and path for every inner route. Kept free of imports so a plain
-// Node test can read it; T5's buildMetadata consumes these objects as they are.
+// Title, description and path for every inner route; T5's buildMetadata consumes
+// these objects as they are. Note metadata is derived from content/notes.ts.
+import { notes } from "./notes";
+
 export type PageMeta = {
   title: string;
   description: string;
@@ -61,28 +63,16 @@ export const notesMeta: PageMeta = {
   path: "/notes/",
 };
 
-export const noteMeta: Record<string, PageMeta> = {
-  "where-the-name-savign-comes-from": {
-    title:
-      "Where the name SAVIGN comes from, and what it means for what we build",
-    description:
-      "SAVIGN comes from Sai Vignesh, and Vignesh from Vighnesha, the one who removes obstacles. How that brief picks the tools we build.",
-    path: "/notes/where-the-name-savign-comes-from/",
-  },
-  "browser-tools-token-cost-coding-agents": {
-    title:
-      "What browser tools cost a coding agent: 2,045 vs 4,319 vs 5,787 tokens",
-    description:
-      "trail's tool definitions take 2,045 tokens, Playwright MCP's 4,319, Chrome DevTools MCP's 5,787. What that number measures and what it does not.",
-    path: "/notes/browser-tools-token-cost-coding-agents/",
-  },
-  "build-pipeline-keeps-lessons-only-with-eval": {
-    title: "A build pipeline that keeps a lesson only when an eval holds it up",
-    description:
-      "hansei reviews every run of its own build pipeline and keeps a lesson only if an eval backs it. Our ablation of the whole plugin came back no verdict.",
-    path: "/notes/build-pipeline-keeps-lessons-only-with-eval/",
-  },
-};
+export const noteMeta: Record<string, PageMeta> = Object.fromEntries(
+  notes.map((note) => [
+    note.slug,
+    {
+      title: note.title,
+      description: note.description,
+      path: `/notes/${note.slug}/`,
+    },
+  ]),
+);
 
 export const contactMeta: PageMeta = {
   title: "Contact | SAVIGN Private Limited",

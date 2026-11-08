@@ -3,9 +3,24 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { routeMeta, projectMeta, noteMeta } from "../content/meta.ts";
-import { projects } from "../content/projects.ts";
-import { notes } from "../content/notes.ts";
+import { registerHooks } from "node:module";
+
+// content/meta.ts imports "./notes" without an extension, as the Next bundler
+// expects; Node needs the .ts suffix spelled out to load it.
+function resolveExtensionlessTs(specifier, context, nextResolve) {
+  const isRelative = specifier.startsWith("./") || specifier.startsWith("../");
+  const hasExtension = /\.[a-z]+$/i.test(specifier);
+  if (isRelative && !hasExtension) {
+    return nextResolve(`${specifier}.ts`, context);
+  }
+  return nextResolve(specifier, context);
+}
+
+registerHooks({ resolve: resolveExtensionlessTs });
+
+const { routeMeta, projectMeta, noteMeta } = await import("../content/meta.ts");
+const { projects } = await import("../content/projects.ts");
+const { notes } = await import("../content/notes.ts");
 
 const outDir = join(dirname(fileURLToPath(import.meta.url)), "..", "out");
 
@@ -18,6 +33,16 @@ test("every project and note has its own route metadata", () => {
     Object.keys(noteMeta).sort(),
     notes.map((note) => note.slug).sort(),
   );
+});
+
+test("note metadata is the note's own title and description", () => {
+  for (const note of notes) {
+    assert.deepEqual(noteMeta[note.slug], {
+      title: note.title,
+      description: note.description,
+      path: `/notes/${note.slug}/`,
+    });
+  }
 });
 
 test("every project links a note that exists", () => {
