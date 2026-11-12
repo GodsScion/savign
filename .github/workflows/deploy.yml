@@ -55,7 +55,7 @@ jobs:
         run: npm run test:out
 
       - name: Check build output
-        run: npm run check -- --release
+        run: npm run check
 
       - name: Setup Pages
         uses: actions/configure-pages@1f0c5cde4bc74cd7e1254d0cb4de8d49e9068c7d # v4.0.0

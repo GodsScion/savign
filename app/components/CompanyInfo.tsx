@@ -27,14 +27,16 @@ export function CompanyInfo({
     <section id={id} className={className} aria-labelledby={headingId}>
       <Heading id={headingId}>{companyInfo.heading}</Heading>
       <dl className="company">
-        {companyInfo.rows.map((row) => (
-          <div key={row.label}>
-            <dt>{row.label}</dt>
-            <dd>
-              <CompanyValue value={row.value} />
-            </dd>
-          </div>
-        ))}
+        {companyInfo.rows
+          .filter((row) => row.value !== null)
+          .map((row) => (
+            <div key={row.label}>
+              <dt>{row.label}</dt>
+              <dd>
+                <CompanyValue value={row.value} />
+              </dd>
+            </div>
+          ))}
       </dl>
     </section>
   );

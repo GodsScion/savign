@@ -8,7 +8,7 @@ export const metadata: Metadata = buildMetadata(contactMeta);
 
 function EmailLink({ email }: { email: string | null }) {
   if (!email) {
-    return <p>Email: Awaiting confirmation</p>;
+    return null;
   }
   return (
     <p>

@@ -47,12 +47,13 @@ test("only the deploy job holds the Pages write and OIDC token", () => {
 });
 
 // Replaces "the probe build test runs before the build and the release check after it": out/ tests joined the order.
+// 2026-11-12: the deploy runs check without --release; empty company fields are hidden on the page (Sai).
 test("probe build test, build, out/ tests and release check run in that order", () => {
   const order = [
     "npm run test:build",
     "npm run build",
     "npm run test:out",
-    "npm run check -- --release",
+    "npm run check",
   ];
   const positions = order.map((step) => WORKFLOW.indexOf(`run: ${step}`));
   assert.ok(

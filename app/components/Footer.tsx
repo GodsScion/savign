@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { company } from "../company";
-import { awaitingConfirmation, navItems, wordmark } from "../../content/site";
+import { navItems, wordmark } from "../../content/site";
 
 const buildYear = new Date().getFullYear();
 
 function legalLine() {
-  return `© ${buildYear} ${company.name}, CIN ${company.cin ?? awaitingConfirmation}`;
+  return company.cin
+    ? `© ${buildYear} ${company.name}, CIN ${company.cin}`
+    : `© ${buildYear} ${company.name}`;
 }
 
 export function Footer() {

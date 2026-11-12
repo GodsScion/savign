@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 import { Arrow } from "./components/Arrow";
 import { CompanyInfo } from "./components/CompanyInfo";
 import { StatusLabel } from "./components/StatusLabel";
-import { awaitingConfirmation, entityLine } from "../content/site";
+import { entityLine } from "../content/site";
 import { contact, founder, hero, principles, work } from "../content/home";
 import { JsonLd, organizationJsonLd, websiteJsonLd } from "./lib/jsonld";
 import { buildMetadata } from "./lib/seo";
@@ -146,7 +146,7 @@ function Founder() {
 
 function EmailLink() {
   if (contact.email === null) {
-    return <p className="contact__email is-pending">{awaitingConfirmation}</p>;
+    return null;
   }
   return (
     <a
